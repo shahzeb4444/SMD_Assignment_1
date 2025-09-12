@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".socialhomescreenchat">
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tophalf"
+
+            >
+            <ImageView
+                android:id="@+id/cameralogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/leftshortarrowred"
+                android:layout_marginTop="35dp"
+                android:layout_marginStart="10dp"
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/small_icon"
+                android:id="@+id/profile"
+                android:layout_toRightOf="@+id/cameralogo"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="40dp"
+
+                />
+
+            <TextView
+                android:id="@+id/sociallytext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="internshala"
+                android:layout_toRightOf="@+id/profile"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="37dp"
+                android:textStyle="bold"
+                android:textSize="17sp"
+                />
+            <ImageView
+                android:id="@+id/messangerlogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/informationicon"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="37dp"
+                android:layout_marginEnd="10dp"
+
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/videocameraicon"
+                android:layout_toLeftOf="@+id/messangerlogo"
+                android:layout_marginTop="37dp"
+                android:layout_marginRight="20dp"
+
+                />
+
+
+
+        </RelativeLayout>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="670dp"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="550dp"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4:49 PM"
+                    android:id="@+id/timetext"
+                    android:layout_gravity="center_horizontal"
+                    />
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/singlemessagebackground"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="25dp"
+                    android:layout_marginRight="15dp"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hello"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="-32dp"
+                    android:layout_marginRight="45dp"
+
+                    />
+
+
+
+            </LinearLayout>
+        </ScrollView>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/bottomhalf"
+            >
+            <EditText
+                android:layout_width="355dp"
+                android:layout_marginStart="20dp"
+                android:layout_height="35dp"
+                android:id="@+id/mainenteringfield"
+                android:hint="Message..."
+                android:paddingLeft="40dp"
+                android:background="@drawable/greybottomchat"
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/redbackgroundcircle"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="5dp"
+                />
+            <ImageView
+                android:id="@+id/whitecameraicon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/whitefilledcamera"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="10dp"
+                />
+            <ImageView
+                android:id="@+id/micicon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/micicon"
+                android:layout_toRightOf="@+id/whitecameraicon"
+                android:layout_marginStart="230dp"
+                android:layout_marginTop="6dp"
+
+                />
+            <ImageView
+                android:id="@+id/galleryicon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/galleryicon"
+                android:layout_toRightOf="@+id/micicon"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="6dp"
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/pageicon"
+                android:layout_toRightOf="@+id/galleryicon"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="6dp"
+                />
+
+
+
+
+        </RelativeLayout>
+    <ImageView
+        android:id="@+id/brownbottomline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/brownbottomline"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="33dp"
+        />
+
+
+
+
+
+</LinearLayout>
