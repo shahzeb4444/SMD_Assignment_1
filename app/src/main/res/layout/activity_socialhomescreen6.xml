@@ -23,18 +23,27 @@
             android:textStyle="bold"
             android:textColor="@color/mainpagesmd"
             android:textSize="20sp"
+            android:clickable="true"
             />
+
         <TextView
             android:id="@+id/Youtext"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="You"
-            android:layout_marginTop="50dp"
             android:layout_alignParentEnd="true"
+            android:layout_marginTop="50dp"
             android:layout_marginEnd="75dp"
-            android:textStyle="bold"
+            android:text="You"
+            android:clickable="true"
             android:textColor="@color/mainpagesmd"
             android:textSize="20sp"
+            android:textStyle="bold" />
+        <View
+            android:layout_width="200dp"
+            android:layout_height="1dp"
+            android:background="@color/mainpagesmd"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/Youtext"
             />
 
     </RelativeLayout>
@@ -768,12 +777,13 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         >
         <ImageView
             android:id="@+id/bottomnavhome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavblackhome"
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             />
@@ -790,7 +800,7 @@
             android:id="@+id/bottomnavcreate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavcreate"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             />
@@ -798,10 +808,10 @@
             android:id="@+id/bottomnavlike"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottombarredheart"
             android:layout_toRightOf="@+id/bottomnavcreate"
             android:layout_marginLeft="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="13dp"
             />
         <ImageView
             android:id="@+id/bottomnavicon"

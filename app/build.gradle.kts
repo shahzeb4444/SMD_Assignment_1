@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.smd_assignment_1"
+    namespace = "com.shahzebrizwan.i230610"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.smd_assignment_1"
+        applicationId = "com.shahzebrizwan.i230610"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -45,4 +45,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

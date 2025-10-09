@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    package="com.shahzebrizwan.i230610">
 
     <application
         android:allowBackup="true"
@@ -11,6 +11,45 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SMD_Assignment_1">
+        <activity
+            android:name=".socialhomescreen17"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen16"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen15"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen14"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen13"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen12"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreenchat"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen11"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen10"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen9"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen8"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen7"
+            android:exported="false" />
+        <activity
+            android:name=".socialhomescreen6"
+            android:exported="false" />
         <activity
             android:name=".socialhomescreen5"
             android:exported="false" />

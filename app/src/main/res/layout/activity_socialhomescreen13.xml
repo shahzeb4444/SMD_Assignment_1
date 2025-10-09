@@ -140,18 +140,70 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/cancelicon"
             android:src="@drawable/whitecancelicon"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="30dp"
             />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/red_heart"
+            android:layout_below="@+id/craigloveprofile"
+            android:layout_marginTop="450dp"
+            android:layout_marginLeft="50dp"
+            android:alpha="0.4"
+            android:id="@+id/heart1"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/red_heart"
+            android:alpha="0.5"
+            android:layout_below="@+id/heart1"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="30dp"
+            android:id="@+id/heart2"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/red_heart"
+            android:alpha="0.7"
+            android:layout_below="@+id/heart2"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="30dp"
+            android:id="@+id/heart3"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/red_heart"
+            android:alpha="1"
+            android:layout_below="@+id/heart3"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="50dp"
+            android:id="@+id/heart4"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/red_heart"
+            android:alpha="0.6"
+            android:layout_below="@+id/heart4"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="30dp"
+            android:id="@+id/heart5"
+            />
+
 
 
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="5dp"
         >
 
         <ImageView
@@ -273,6 +325,15 @@
             android:layout_marginStart="33dp"
             android:layout_below="@+id/bottombaractivity"
             android:layout_marginTop="11dp"
+            android:id="@+id/moretext"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/moretext"
+            android:src="@drawable/brownbottomline"
+            android:layout_marginTop="28dp"
             />
 
 

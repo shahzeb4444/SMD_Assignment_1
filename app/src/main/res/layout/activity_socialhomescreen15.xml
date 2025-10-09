@@ -28,7 +28,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/greycircle2"
             android:alpha="0.6"
-
             android:id="@+id/g1"
             android:layout_marginTop="8dp"
             android:layout_marginStart="25dp"

@@ -12,7 +12,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="40dp"
         >
         <ImageView
             android:layout_width="match_parent"
@@ -65,7 +65,7 @@
             android:layout_marginStart="2dp"
             />
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="65dp"
             android:layout_height="wrap_content"
             android:src="@drawable/hollowviewstoryline"
             android:id="@+id/l6"
@@ -104,6 +104,7 @@
             android:layout_marginStart="8dp"
             />
         <ImageView
+            android:id="@+id/whitecancelicon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/whitecancelicon"
@@ -133,7 +134,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/greycircle"
+            android:src="@drawable/greycircle2"
             android:layout_marginStart="26dp"
             android:layout_marginTop="5dp"
             />
@@ -167,7 +168,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/brownbottomline"
             android:layout_below="@+id/inputmessagefield"
-            android:layout_marginTop="38dp"
+            android:layout_marginTop="26dp"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="4dp"
             />

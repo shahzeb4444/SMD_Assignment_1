@@ -12,6 +12,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/tophalf"
+            android:background="#F4F2F2"
 
             >
             <ImageView
@@ -58,6 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/videocameraicon"
+                android:id="@+id/call"
                 android:layout_toLeftOf="@+id/messangerlogo"
                 android:layout_marginTop="37dp"
                 android:layout_marginRight="20dp"

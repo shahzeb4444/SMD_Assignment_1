@@ -23,27 +23,30 @@
                 <EditText
                     android:id="@+id/searchfield"
                     android:layout_width="330dp"
-                    android:layout_marginStart="40dp"
-                    android:text="Search"
-
+                    android:layout_marginStart="15dp"
+                    android:hint="Search"
+                    android:imeOptions="actionDone"
+                    android:singleLine="true"
+                    android:paddingLeft="35dp"
                     android:textColor="@color/mainpagesmd"
-                    android:layout_height="50dp"
-                    android:background="@drawable/rectangle"
+                    android:layout_height="40dp"
+                    android:background="@drawable/searchgreyrectangle"
                     android:layout_marginTop="50dp"
                     />
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/search_icon"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="64dp"
+                    android:src="@drawable/redsmallsearchiconwithoutbold"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="60dp"
                     />
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/liveicon"
                     android:layout_toRightOf="@+id/searchfield"
-                    android:layout_marginTop="65dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="60dp"
 
                     />
             </RelativeLayout>
@@ -328,13 +331,13 @@
                 <ImageView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_column="0"
                     android:layout_row="5"
                     android:layout_rowSpan="1"
+                    android:layout_column="0"
                     android:layout_columnSpan="1"
+                    android:layout_columnWeight="1"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/camelphoto"/>
+                    android:src="@drawable/camelphoto" />
 
                 <ImageView
                     android:layout_width="0dp"
@@ -405,7 +408,7 @@
             android:id="@+id/bottomnavhome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavblackhome"
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             />
@@ -413,27 +416,27 @@
             android:id="@+id/bottomnavsearch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/search_icon"
+            android:src="@drawable/bottomnavselectedsearch"
             android:layout_toRightOf="@+id/bottomnavhome"
-            android:layout_marginLeft="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginLeft="55dp"
+            android:layout_marginTop="11dp"
             />
         <ImageView
             android:id="@+id/bottomnavcreate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavcreate"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="11dp"
             />
         <ImageView
             android:id="@+id/bottomnavlike"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavheart"
             android:layout_toRightOf="@+id/bottomnavcreate"
             android:layout_marginLeft="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="13dp"
             />
         <ImageView
             android:id="@+id/bottomnavicon"
@@ -450,7 +453,7 @@
             android:src="@drawable/brownbottomline"
             android:layout_below="@+id/bottomnavcreate"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="18dp"
             />
 
 

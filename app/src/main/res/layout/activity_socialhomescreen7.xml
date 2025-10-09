@@ -36,6 +36,14 @@
             android:textColor="@color/mainpagesmd"
             android:textSize="20sp"
             />
+        <View
+            android:layout_width="200dp"
+            android:layout_height="1dp"
+            android:layout_alignParentEnd="true"
+            android:background="@color/mainpagesmd"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/Youtext"
+            />
 
     </RelativeLayout>
     <ScrollView
@@ -54,11 +62,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Follow Requests"
+                    android:id="@+id/followrequest"
                     android:textColor="@color/mainpagesmd"
                     android:textSize="18sp"
                     android:layout_marginTop="20dp"
                     android:layout_marginStart="30dp"
                     />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#33000000"
+                    android:layout_below="@+id/followrequest"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="5dp"/>
+
             </RelativeLayout>
 
             <RelativeLayout
@@ -75,6 +92,7 @@
                     android:layout_marginTop="10dp"
                     android:textSize="18sp"
                     />
+
                 <ImageView
                     android:id="@+id/karenneprofile"
                     android:layout_width="wrap_content"
@@ -129,7 +147,12 @@
                     android:layout_marginEnd="10dp"
                     android:layout_marginTop="55dp"
                     />
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#33000000"
+                    android:layout_below="@+id/karenneprofile"
+                    android:layout_marginBottom="5dp"/>
 
             </RelativeLayout>
             <RelativeLayout
@@ -237,14 +260,22 @@
                     android:layout_toRightOf="@+id/phototext"
                     android:layout_marginLeft="5dp"
                     android:textSize="10dp"
+                    android:id="@+id/threehourtext"
                     android:layout_marginTop="3dp"
                     android:layout_below="@+id/kierod"
                     />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#33000000"
+                    android:layout_below="@+id/doubleprofile"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginTop="20dp"/>
             </RelativeLayout>
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 >
                 <TextView
                     android:id="@+id/ThisWeekText"
@@ -564,6 +595,13 @@
                     android:layout_marginEnd="10dp"
                     android:layout_marginTop="34dp"
                     />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#33000000"
+                    android:layout_below="@+id/craigloveprofile3"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginTop="0dp"/>
 
             </RelativeLayout>
 
@@ -791,7 +829,7 @@
             android:id="@+id/bottomnavhome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavblackhome"
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             />
@@ -808,7 +846,7 @@
             android:id="@+id/bottomnavcreate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavcreate"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             />
@@ -816,10 +854,10 @@
             android:id="@+id/bottomnavlike"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottombarredheart"
             android:layout_toRightOf="@+id/bottomnavcreate"
             android:layout_marginLeft="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="13dp"
             />
         <ImageView
             android:id="@+id/bottomnavicon"

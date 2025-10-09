@@ -557,10 +557,17 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/gridicons"
                     android:src="@drawable/gridicons"
                     android:layout_marginBottom="15dp"
                     android:layout_marginStart="75dp"
                     />
+                <View
+                    android:layout_width="200dp"
+                    android:layout_height="2dp"
+                    android:background="@color/mainpagesmd"
+                    android:layout_below="@+id/gridicons"
+                    android:layout_marginTop="0dp"/>
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -716,7 +723,7 @@
             android:id="@+id/bottomnavhome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavblackhome"
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             />
@@ -733,7 +740,7 @@
             android:id="@+id/bottomnavcreate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/bottomnavcreate"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             />
@@ -741,10 +748,10 @@
             android:id="@+id/bottomnavlike"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/bottomnavhome"
+            android:src="@drawable/heart"
             android:layout_toRightOf="@+id/bottomnavcreate"
             android:layout_marginLeft="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="11dp"
             />
         <ImageView
             android:id="@+id/bottomnavicon"
