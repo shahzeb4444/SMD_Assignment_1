@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.shahzebrizwan.i230610"
+    namespace = "com.teamsx.i230610_i230040"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.shahzebrizwan.i230610"
+        applicationId = "com.teamsx.i230610_i230040"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.shahzebrizwan.i230610
+package com.teamsx.i230610_i230040
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,17 +6,17 @@ import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
-class socialhomescreen10 : AppCompatActivity() {
+class socialhomescreen9 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_socialhomescreen10)
+        setContentView(R.layout.activity_socialhomescreen9)
         var bottomnavsearch = findViewById<ImageView>(R.id.bottomnavsearch)
         var bottomnavhome = findViewById<ImageView>(R.id.bottomnavhome)
         var bottomnavcreate = findViewById<ImageView>(R.id.bottomnavcreate)
         var bottomnavlike = findViewById<ImageView>(R.id.bottomnavlike)
         var bottomnavprofile = findViewById<ImageView>(R.id.bottomnavicon)
-        var followbtn = findViewById<ImageView>(R.id.feedbutton1)
+        var unfollowbtn = findViewById<ImageView>(R.id.feedbutton1)
         bottomnavhome.setOnClickListener {
             val intent = Intent(this, socialhomescreen2::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -48,8 +48,8 @@ class socialhomescreen10 : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        followbtn.setOnClickListener {
-            val intent = Intent(this, socialhomescreen9::class.java)
+        unfollowbtn.setOnClickListener {
+            val intent = Intent(this, socialhomescreen10::class.java)
             startActivity(intent)
             finish()
         }
