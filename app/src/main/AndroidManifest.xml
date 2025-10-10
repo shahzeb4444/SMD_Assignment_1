@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.shahzebrizwan.i230610">
+    package="com.teamsx.i230610_i230040">
 
     <application
         android:allowBackup="true"
@@ -12,71 +12,71 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SMD_Assignment_1">
         <activity
-            android:name=".socialhomescreen17"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen17"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen16"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen16"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen15"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen15"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen14"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen14"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen13"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen13"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen12"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen12"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreenchat"
+            android:name="com.teamsx.i230610_i230040.socialhomescreenchat"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen11"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen11"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen10"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen10"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen9"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen9"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen8"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen8"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen7"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen7"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen6"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen6"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen5"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen5"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen4"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen4"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen3"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen3"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen2"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen2"
             android:exported="false" />
         <activity
-            android:name=".socialhomescreen1"
+            android:name="com.teamsx.i230610_i230040.socialhomescreen1"
             android:exported="false" />
         <activity
-            android:name=".mainlogin"
+            android:name="com.teamsx.i230610_i230040.mainlogin"
             android:exported="false" />
         <activity
-            android:name=".login_splash"
+            android:name="com.teamsx.i230610_i230040.login_splash"
             android:exported="false" />
         <activity
-            android:name=".second_page"
+            android:name="com.teamsx.i230610_i230040.second_page"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.teamsx.i230610_i230040.MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SMD_Assignment_1"
+rootProject.name = "I230610_I230040"
 include(":app")
