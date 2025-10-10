@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, login_splash::class.java)
+            val intent = Intent(this, mainlogin::class.java)
             startActivity(intent)
             finish() // close SplashActivity so user can’t go back to it
         }, 2000) //

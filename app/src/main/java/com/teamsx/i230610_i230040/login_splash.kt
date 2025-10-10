@@ -1,20 +1,63 @@
 package com.teamsx.i230610_i230040
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
+import android.util.Base64
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class login_splash : AppCompatActivity() {
+
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseDatabase.getInstance().reference }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_login_splash)
-        var lgnbtn = findViewById<Button>(R.id.loginbutton)
-        var switchaccount = findViewById<TextView>(R.id.switchaccounts)
-        var signup = findViewById<TextView>(R.id.signup)
+
+        val lgnbtn = findViewById<Button>(R.id.loginbutton)
+        val switchaccount = findViewById<TextView>(R.id.switchaccounts)
+        val signup = findViewById<TextView>(R.id.signup)
+        val profilename = findViewById<TextView>(R.id.profilename)
+        val profilepic = findViewById<ImageView>(R.id.profilepic)
+
+        // 1) If not logged in, go to login
+        val user = auth.currentUser
+        if (user == null) {
+            startActivity(Intent(this, mainlogin::class.java))
+            finish()
+            return
+        }
+
+        // 2) Load /users/{uid} once and fill UI
+        db.child("users").child(user.uid).get()
+            .addOnSuccessListener { snap ->
+                val profile = snap.getValue(UserProfile::class.java)
+                profilename.text = profile?.username ?: "user"
+
+                // decode Base64 photo if present
+                val b64 = profile?.photoBase64
+                if (!b64.isNullOrEmpty()) {
+                    try {
+                        val bytes = Base64.decode(b64, Base64.DEFAULT)
+                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        profilepic.setImageBitmap(bmp)
+                    } catch (_: Exception) { /* ignore bad data */ }
+                } else {
+                    // optional: set a placeholder drawable
+                    profilepic.setImageResource(R.drawable.ic_launcher_background)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Couldn’t load profile.", Toast.LENGTH_SHORT).show()
+            }
+
+        // 3) Buttons
         lgnbtn.setOnClickListener {
             val intent = Intent(this, socialhomescreen1::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -22,13 +65,13 @@ class login_splash : AppCompatActivity() {
             finish()
         }
         switchaccount.setOnClickListener {
-            val intent = Intent(this, mainlogin::class.java)
-            startActivity(intent)
-
+            // Sign out then go to login
+            auth.signOut()
+            startActivity(Intent(this, mainlogin::class.java))
+            finish()
         }
         signup.setOnClickListener {
-            val intent = Intent(this, second_page::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, second_page::class.java))
         }
     }
 }
