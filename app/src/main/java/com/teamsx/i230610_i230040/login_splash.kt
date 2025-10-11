@@ -22,7 +22,6 @@ class login_splash : AppCompatActivity() {
 
         val lgnbtn = findViewById<Button>(R.id.loginbutton)
         val switchaccount = findViewById<TextView>(R.id.switchaccounts)
-        val signup = findViewById<TextView>(R.id.signup)
         val profilename = findViewById<TextView>(R.id.profilename)
         val profilepic = findViewById<ImageView>(R.id.profilepic)
 
@@ -70,8 +69,17 @@ class login_splash : AppCompatActivity() {
             startActivity(Intent(this, mainlogin::class.java))
             finish()
         }
-        signup.setOnClickListener {
-            startActivity(Intent(this, second_page::class.java))
+
+        val logoutText = findViewById<TextView>(R.id.logout)
+        logoutText.setOnClickListener {
+            auth.signOut()
+            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, mainlogin::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
+
+
     }
 }
