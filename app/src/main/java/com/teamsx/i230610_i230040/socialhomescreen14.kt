@@ -11,11 +11,15 @@ class socialhomescreen14 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_socialhomescreen14)
+
         val cancelicon = findViewById<ImageView>(R.id.whitecancelicon)
         cancelicon.setOnClickListener {
-            val intent = Intent(this, socialhomescreen1::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_home)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
     }

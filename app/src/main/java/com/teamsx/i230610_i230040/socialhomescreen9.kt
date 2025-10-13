@@ -11,53 +11,78 @@ class socialhomescreen9 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_socialhomescreen9)
-        var bottomnavsearch = findViewById<ImageView>(R.id.bottomnavsearch)
-        var bottomnavhome = findViewById<ImageView>(R.id.bottomnavhome)
-        var bottomnavcreate = findViewById<ImageView>(R.id.bottomnavcreate)
-        var bottomnavlike = findViewById<ImageView>(R.id.bottomnavlike)
-        var bottomnavprofile = findViewById<ImageView>(R.id.bottomnavicon)
-        var unfollowbtn = findViewById<ImageView>(R.id.feedbutton1)
+
+        val bottomnavsearch = findViewById<ImageView>(R.id.bottomnavsearch)
+        val bottomnavhome = findViewById<ImageView>(R.id.bottomnavhome)
+        val bottomnavcreate = findViewById<ImageView>(R.id.bottomnavcreate)
+        val bottomnavlike = findViewById<ImageView>(R.id.bottomnavlike)
+        val bottomnavprofile = findViewById<ImageView>(R.id.bottomnavicon)
+        val unfollowbtn = findViewById<ImageView>(R.id.feedbutton1)
+        val backarrow = findViewById<ImageView>(R.id.leftarrow)
+
+        // ---- Bottom nav → HomeActivity with selected tab ----
         bottomnavhome.setOnClickListener {
-            val intent = Intent(this, socialhomescreen2::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_home)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
+
         bottomnavsearch.setOnClickListener {
-            val intent = Intent(this, socialhomescreen2::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_search)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
 
         bottomnavcreate.setOnClickListener {
-            val intent = Intent(this, socialhomescreen17::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            // Keep behavior: open your existing create activity
+            startActivity(
+                Intent(this, socialhomescreen17::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
+        }
 
-        }
         bottomnavlike.setOnClickListener {
-            val intent = Intent(this, socialhomescreen6::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_notifications)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
+
         bottomnavprofile.setOnClickListener {
-            val intent = Intent(this, socialhomescreen8::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_profile)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
+
+        // Keep existing flows
         unfollowbtn.setOnClickListener {
-            val intent = Intent(this, socialhomescreen10::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, socialhomescreen10::class.java))
             finish()
         }
-        val backarrow = findViewById<ImageView>(R.id.leftarrow)
+
         backarrow.setOnClickListener {
-            val intent = Intent(this, socialhomescreen1::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_home)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
     }

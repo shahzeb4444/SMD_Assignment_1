@@ -1,4 +1,5 @@
 package com.teamsx.i230610_i230040
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
@@ -10,11 +11,16 @@ class socialhomescreen12 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_socialhomescreen12)
+
         val cancelicon = findViewById<ImageView>(R.id.whitecancelicon)
         cancelicon.setOnClickListener {
-            val intent = Intent(this, socialhomescreen1::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            // Go back to HomeActivity with the Home tab selected
+            startActivity(
+                Intent(this, HomeActivity::class.java).apply {
+                    putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_home)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            )
             finish()
         }
     }
