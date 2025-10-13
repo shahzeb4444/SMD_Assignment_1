@@ -58,8 +58,11 @@ class login_splash : AppCompatActivity() {
 
         // 3) Buttons
         lgnbtn.setOnClickListener {
-            val intent = Intent(this, socialhomescreen1::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            // CHANGED: go to HomeActivity (BottomNav) instead of socialhomescreen1
+            val intent = Intent(this, HomeActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(HomeActivity.EXTRA_START_DEST, R.id.nav_home)
+            }
             startActivity(intent)
             finish()
         }
@@ -79,7 +82,5 @@ class login_splash : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-
-
     }
 }
