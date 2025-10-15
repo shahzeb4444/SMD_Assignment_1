@@ -11,10 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SMD_Assignment_1">
-
+        <activity
+            android:name=".UserSearchActivity"
+            android:exported="false" />
         <activity
             android:name=".HomeActivity"
-
             android:exported="false" />
         <activity
             android:name=".socialhomescreen17"
@@ -46,7 +47,6 @@
         <activity
             android:name=".socialhomescreen9"
             android:exported="false" />
-
         <activity
             android:name=".socialhomescreen5"
             android:exported="false" />
@@ -56,7 +56,6 @@
         <activity
             android:name=".socialhomescreen3"
             android:exported="false" />
-
         <activity
             android:name=".mainlogin"
             android:exported="false" />
