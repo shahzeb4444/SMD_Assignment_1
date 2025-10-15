@@ -5,23 +5,41 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
+import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
 
 class SearchFragment : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        inflater.inflate(R.layout.fragment_search, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val searchField = view.findViewById<EditText>(R.id.searchfield)
-        searchField.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                if (searchField.text.toString().trim().equals("internshala", true)) {
-                    startActivity(Intent(requireContext(), socialhomescreen3::class.java))
-                }
-                true
-            } else false
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val view = inflater.inflate(R.layout.fragment_search, container, false)
+
+        val searchBox = view.findViewById<AutoCompleteTextView>(R.id.searchfield)
+
+        // Single tap → open the dedicated search screen
+        searchBox.setOnClickListener {
+            val q = searchBox.text?.toString().orEmpty()
+            startActivity(
+                Intent(requireContext(), UserSearchActivity::class.java)
+                    .putExtra(UserSearchActivity.EXTRA_QUERY, q)
+            )
         }
+
+        // (Optional) Also open when field gains focus via keyboard navigation
+        searchBox.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val q = searchBox.text?.toString().orEmpty()
+                startActivity(
+                    Intent(requireContext(), UserSearchActivity::class.java)
+                        .putExtra(UserSearchActivity.EXTRA_QUERY, q)
+                )
+                // Clear focus so we don’t re-trigger when returning
+                searchBox.clearFocus()
+            }
+        }
+
+        return view
     }
 }
