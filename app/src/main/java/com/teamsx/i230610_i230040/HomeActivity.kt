@@ -88,15 +88,11 @@ class HomeActivity : AppCompatActivity() {
             .addOnSuccessListener { snap ->
                 val b64 = snap.getValue(String::class.java)
                 if (!b64.isNullOrEmpty()) {
-                    try {
-                        val bytes = Base64.decode(b64, Base64.DEFAULT)
-                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        if (bmp != null) {
-                            setProfileIconBitmap(bottom, bmp)
-                            return@addOnSuccessListener
-                        }
-                    } catch (_: Exception) {
-                        // fall through to placeholder
+                    // Use ImageUtils for optimized loading
+                    val bmp = ImageUtils.loadBase64ImageOptimized(b64, 100)
+                    if (bmp != null) {
+                        setProfileIconBitmap(bottom, bmp)
+                        return@addOnSuccessListener
                     }
                 }
                 // missing or invalid → placeholder
