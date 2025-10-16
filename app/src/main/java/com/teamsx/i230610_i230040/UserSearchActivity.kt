@@ -1,5 +1,6 @@
 package com.teamsx.i230610_i230040
 
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.text.Editable
@@ -147,10 +148,16 @@ private class UserVH(itemView: android.view.View) : RecyclerView.ViewHolder(item
             avatar.setImageResource(R.drawable.profile_login_splash_small) // placeholder
         }
 
-        // Optional: click to open a profile screen you already have
+        // Click to open user profile in HomeActivity
         itemView.setOnClickListener {
-            // e.g., open socialhomescreen10/9, or a future ProfileActivity
-            // itemView.context.startActivity(Intent(itemView.context, socialhomescreen10::class.java))
+            val context = itemView.context
+            val intent = Intent(context, HomeActivity::class.java).apply {
+                putExtra("open_user_profile", true)
+                putExtra("user_id", row.uid)
+                putExtra("username", row.username)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            context.startActivity(intent)
         }
     }
 }
