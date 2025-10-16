@@ -5,12 +5,16 @@ package com.teamsx.i230610_i230040
  * Defaults are required so Firebase can deserialize it.
  */
 data class UserProfile(
-    val username: String = "",          // store LOWERCASE
+    val username: String = "",          // store LOWERCASE for uniqueness
     val firstName: String = "",
     val lastName: String = "",
-    val dob: String = "",               // e.g., "2003-05-12" (string is fine)
+    val dob: String = "",               // e.g., "2003-05-12"
     val email: String = "",
     val photoBase64: String? = null,    // optional; null if no photo picked
+    val bio: String = "",               // NEW: user bio
+    val postsCount: Int = 0,            // NEW: number of posts
+    val followersCount: Int = 0,        // NEW: number of followers
+    val followingCount: Int = 0,        // NEW: number of following
     val isProfileComplete: Boolean = true
 ) {
     /** Use for updateChildren() fan-out writes. */
@@ -21,6 +25,10 @@ data class UserProfile(
         "dob" to dob,
         "email" to email,
         "photoBase64" to photoBase64,
+        "bio" to bio,
+        "postsCount" to postsCount,
+        "followersCount" to followersCount,
+        "followingCount" to followingCount,
         "isProfileComplete" to isProfileComplete
     )
 
