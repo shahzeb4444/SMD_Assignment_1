@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
-
+import androidx.navigation.fragment.findNavController
 class HomeFragment : Fragment() {
 
     override fun onCreateView(
@@ -30,11 +30,34 @@ class HomeFragment : Fragment() {
             val intent = Intent(Intent.ACTION_VIEW).apply { type = "image/*" }
             startActivity(intent)
         }
-        messages.setOnClickListener { startActivity(Intent(requireContext(), socialhomescreen4::class.java)) }
-        listOf(p2, p3, p4, p5, p6).forEach {
-            it.setOnClickListener { startActivity(Intent(requireContext(), socialhomescreen12::class.java)) }
+
+        messages.setOnClickListener {
+            startActivity(Intent(requireContext(), socialhomescreen4::class.java))
         }
-        p1.setOnClickListener { startActivity(Intent(requireContext(), socialhomescreen14::class.java)) }
-        otheruserprofile.setOnClickListener { startActivity(Intent(requireContext(), socialhomescreen10::class.java)) }
+
+        listOf(p2, p3, p4, p5, p6).forEach {
+            it.setOnClickListener {
+                startActivity(Intent(requireContext(), socialhomescreen12::class.java))
+            }
+        }
+
+        p1.setOnClickListener {
+            startActivity(Intent(requireContext(), socialhomescreen14::class.java))
+        }
+
+        // Navigate to other user profile fragment when clicking on user profile
+        otheruserprofile.setOnClickListener {
+            // For demo purposes, using a hardcoded user.
+            // In production, you would get this from the post data
+            navigateToUserProfile("demo_user_id", "joshua_l")
+        }
+    }
+
+    private fun navigateToUserProfile(userId: String, username: String) {
+        val bundle = Bundle().apply {
+            putString("user_id", userId)
+            putString("username", username)
+        }
+        findNavController().navigate(R.id.other_user_profile, bundle)
     }
 }
