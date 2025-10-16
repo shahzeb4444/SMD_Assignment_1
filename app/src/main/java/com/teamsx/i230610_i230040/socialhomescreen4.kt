@@ -4,17 +4,29 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class socialhomescreen4 : AppCompatActivity() {
-    @SuppressLint("MissingInflatedId")
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var database: DatabaseReference
+    private val usersList = mutableListOf<Pair<String, UserProfile>>() // Pair<uid, UserProfile>
+
+    // Class-level variable for logged-in user's UID
+    private val currentUserId: String by lazy { FirebaseAuth.getInstance().currentUser?.uid ?: "" }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_socialhomescreen4)
+
+        database = FirebaseDatabase.getInstance().reference.child("users")
+        recyclerView = findViewById(R.id.userRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
         val back = findViewById<ImageView>(R.id.leftarrowlogo)
         back.setOnClickListener {
@@ -26,49 +38,34 @@ class socialhomescreen4 : AppCompatActivity() {
             finish()
         }
 
-        val go = findViewById<RelativeLayout>(R.id.r1)
-        go.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
+        loadUsers()
+    }
 
-        val go2 = findViewById<RelativeLayout>(R.id.r2)
-        go2.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
+    private fun loadUsers() {
+        if (currentUserId.isEmpty()) return  // safety check
 
-        val go3 = findViewById<RelativeLayout>(R.id.r3)
-        go3.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                usersList.clear()
+                for (userSnap in snapshot.children) {
+                    val uid = userSnap.key ?: continue
+                    if (uid == currentUserId) continue // skip self
 
-        val go4 = findViewById<RelativeLayout>(R.id.r4)
-        go4.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
+                    val profile = userSnap.getValue(UserProfile::class.java) ?: continue
+                    usersList.add(Pair(uid, profile))
+                }
 
-        val go5 = findViewById<RelativeLayout>(R.id.r5)
-        go5.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
-
-        val go6 = findViewById<RelativeLayout>(R.id.r6)
-        go6.setOnClickListener {
-            val intent = Intent(this, socialhomescreenchat::class.java)
-            startActivity(intent)
-        }
-
-        val camerabtn = findViewById<TextView>(R.id.cameraoption)
-        camerabtn.setOnClickListener {
-            // Open the default gallery / photos app
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                type = "image/*"   // tell system we want to view images
+                recyclerView.adapter = UserAdapter(usersList) { clickedUid, username ->
+                    // now we can safely use currentUserId and clickedUid
+                    val chatId = if (currentUserId < clickedUid) "$currentUserId$clickedUid" else "$clickedUid$currentUserId"
+                    val intent = Intent(this@socialhomescreen4, socialhomescreenchat::class.java)
+                    intent.putExtra("chatId", chatId)
+                    intent.putExtra("otherUserName", username)
+                    startActivity(intent)
+                }
             }
-            startActivity(intent)
-        }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
     }
 }
