@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">SMD_Assignment_1</string>
-
+    <string name="chat_header">Chat</string>
 </resources>
