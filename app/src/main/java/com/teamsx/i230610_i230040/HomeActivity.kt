@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
@@ -16,7 +15,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import android.util.Base64
+import android.graphics.BitmapFactory
 
 class HomeActivity : AppCompatActivity() {
 
@@ -32,7 +31,7 @@ class HomeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_home)
 
-        // Safest way to get the navController
+        // NavController
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
         val navController = navHostFragment.navController
@@ -54,10 +53,8 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        // Optional: open a specific tab when launched with an extra
-        intent.getIntExtra(EXTRA_START_DEST, 0)
-            .takeIf { it != 0 }
-            ?.let { destId -> bottom.selectedItemId = destId }
+        // Handle deep link / extras on first launch
+        handleProfileDeepLink(intent, navController, bottom)
 
         // Insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
@@ -66,19 +63,66 @@ class HomeActivity : AppCompatActivity() {
             insets
         }
 
-        // --- Load and set the profile icon from Firebase (Base64) ---
+        // Load and set the profile icon from Firebase (Base64)
         loadProfileIconIntoBottomNav(bottom)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // keep latest extras available via getIntent()
+        setIntent(intent)
+
+        // We already have the layout set, just fetch the existing NavController and BottomNav
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
+        val navController = navHostFragment.navController
+        val bottom = findViewById<BottomNavigationView>(R.id.bottom_nav)
+
+        // Handle deep link / extras when Activity is re-used (singleTop / clearTop)
+        handleProfileDeepLink(intent, navController, bottom)
     }
 
     // ===== Helpers =====
 
+    /**
+     * Handles intents that request opening another user's profile.
+     * Works on both fresh starts (onCreate) and reuses (onNewIntent).
+     */
+    private fun handleProfileDeepLink(
+        intent: Intent,
+        navController: androidx.navigation.NavController,
+        bottom: BottomNavigationView
+    ) {
+        if (intent.getBooleanExtra("open_user_profile", false)) {
+            val userId = intent.getStringExtra("user_id")
+            val username = intent.getStringExtra("username")
+
+            if (!userId.isNullOrEmpty() && !username.isNullOrEmpty()) {
+                val args = Bundle().apply {
+                    putString("user_id", userId)
+                    putString("username", username)
+                }
+                navController.navigate(R.id.other_user_profile, args)
+
+                // prevent re-triggering on configuration changes
+                intent.removeExtra("open_user_profile")
+                intent.removeExtra("user_id")
+                intent.removeExtra("username")
+            }
+        } else {
+            // Optional: open a specific tab when launched with an extra
+            intent.getIntExtra(EXTRA_START_DEST, 0)
+                .takeIf { it != 0 }
+                ?.let { destId -> bottom.selectedItemId = destId }
+        }
+    }
+
     private fun loadProfileIconIntoBottomNav(bottom: BottomNavigationView) {
-        // important: disable tint so we show real colors
+        // disable tint so we show real colors
         bottom.itemIconTintList = null
 
         val uid = auth.currentUser?.uid
         if (uid == null) {
-            // fallback to a small placeholder from resources
             val ph = BitmapFactory.decodeResource(resources, R.drawable.profile_login_splash_small)
             setProfileIconBitmap(bottom, ph)
             return
@@ -88,23 +132,16 @@ class HomeActivity : AppCompatActivity() {
             .addOnSuccessListener { snap ->
                 val b64 = snap.getValue(String::class.java)
                 if (!b64.isNullOrEmpty()) {
-                    try {
-                        val bytes = Base64.decode(b64, Base64.DEFAULT)
-                        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        if (bmp != null) {
-                            setProfileIconBitmap(bottom, bmp)
-                            return@addOnSuccessListener
-                        }
-                    } catch (_: Exception) {
-                        // fall through to placeholder
+                    val bmp = ImageUtils.loadBase64ImageOptimized(b64, 100)
+                    if (bmp != null) {
+                        setProfileIconBitmap(bottom, bmp)
+                        return@addOnSuccessListener
                     }
                 }
-                // missing or invalid → placeholder
                 val ph = BitmapFactory.decodeResource(resources, R.drawable.profile_login_splash_small)
                 setProfileIconBitmap(bottom, ph)
             }
             .addOnFailureListener {
-                // DB error → placeholder
                 val ph = BitmapFactory.decodeResource(resources, R.drawable.profile_login_splash_small)
                 setProfileIconBitmap(bottom, ph)
             }
