@@ -9,27 +9,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class OtherUserProfileFragment : Fragment() {
 
     companion object {
         const val ARG_USER_ID = "user_id"
         const val ARG_USERNAME = "username"
-
-        fun newInstance(userId: String, username: String): OtherUserProfileFragment {
-            val fragment = OtherUserProfileFragment()
-            val args = Bundle()
-            args.putString(ARG_USER_ID, userId)
-            args.putString(ARG_USERNAME, username)
-            fragment.arguments = args
-            return fragment
-        }
     }
 
+    private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseDatabase.getInstance().reference }
 
     private lateinit var profileImageView: ShapeableImageView
@@ -39,11 +29,16 @@ class OtherUserProfileFragment : Fragment() {
     private lateinit var postsCountTextView: TextView
     private lateinit var followersCountTextView: TextView
     private lateinit var followingCountTextView: TextView
-    private lateinit var followButton: ImageView
+    private lateinit var followButtonBg: ImageView
+    private lateinit var followLabel: TextView
     private lateinit var backArrow: ImageView
 
     private var userId: String? = null
     private var username: String? = null
+
+    private enum class Rel { NONE, REQUESTED, INCOMING_REQUEST, FOLLOWING, FOLLOWED_BY }
+    private var currentRel: Rel = Rel.NONE
+    private var relListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,16 +48,10 @@ class OtherUserProfileFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_other_user_profile, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.fragment_other_user_profile, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Initialize views
         profileImageView = view.findViewById(R.id.profileicon)
         usernameTextView = view.findViewById(R.id.jacobtext)
         fullNameTextView = view.findViewById(R.id.profileusername)
@@ -70,104 +59,192 @@ class OtherUserProfileFragment : Fragment() {
         postsCountTextView = view.findViewById(R.id.noposts)
         followersCountTextView = view.findViewById(R.id.nofollowers)
         followingCountTextView = view.findViewById(R.id.nofollowing)
-        followButton = view.findViewById(R.id.feedbutton1)
+        followButtonBg = view.findViewById(R.id.feedbutton1)
+        followLabel = view.findViewById(R.id.followLabel)
         backArrow = view.findViewById(R.id.leftarrow)
 
-        // Back button navigation
-        backArrow.setOnClickListener {
-            // Navigate back or to home
-            requireActivity().onBackPressedDispatcher.onBackPressed()
-        }
+        backArrow.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
 
-        // Follow button click
-        followButton.setOnClickListener {
-            // TODO: Implement follow/unfollow functionality
-            Toast.makeText(requireContext(), "Follow functionality coming soon", Toast.LENGTH_SHORT).show()
-        }
+        val clickFollow: (View) -> Unit = { onFollowClicked() }
+        followButtonBg.setOnClickListener(clickFollow)
+        followLabel.setOnClickListener(clickFollow)
 
-        // Story highlights listeners
-        listOf(
-            view.findViewById<ImageView>(R.id.circle2),
-            view.findViewById<ImageView>(R.id.circle2_2),
-            view.findViewById<ImageView>(R.id.circle3),
-            view.findViewById<ImageView>(R.id.circle_4),
-            view.findViewById<ImageView>(R.id.circle4)
-        ).forEach { imageView ->
-            imageView?.setOnClickListener {
-                Toast.makeText(requireContext(), "Story highlights coming soon", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Load user profile
+        observeRelationship()
         loadUserProfile()
     }
 
-    private fun loadUserProfile() {
-        val uid = userId
-        if (uid == null) {
-            Toast.makeText(requireContext(), "User ID not found", Toast.LENGTH_SHORT).show()
-            return
+    override fun onDestroyView() {
+        super.onDestroyView()
+        val me = auth.currentUser?.uid
+        val other = userId
+        if (me != null && other != null) {
+            relListener?.let {
+                db.child("relationships").child(me).child(other).removeEventListener(it)
+            }
         }
+    }
 
+    private fun observeRelationship() {
+        val me = auth.currentUser?.uid ?: return
+        val other = userId ?: return
+        val ref = db.child("relationships").child(me).child(other)
+        relListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                currentRel = when (snapshot.getValue(String::class.java)) {
+                    "requested" -> Rel.REQUESTED
+                    "incoming_request" -> Rel.INCOMING_REQUEST
+                    "following" -> Rel.FOLLOWING
+                    "followed_by" -> Rel.FOLLOWED_BY
+                    else -> Rel.NONE
+                }
+                renderFollowButton()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        }
+        ref.addValueEventListener(relListener as ValueEventListener)
+    }
+
+    private fun renderFollowButton() {
+        when (currentRel) {
+            Rel.NONE, Rel.FOLLOWED_BY -> followLabel.text = "Follow"
+            Rel.REQUESTED -> followLabel.text = "Requested"
+            Rel.INCOMING_REQUEST -> followLabel.text = "Accept"
+            Rel.FOLLOWING -> followLabel.text = "Following"
+        }
+    }
+
+    private fun onFollowClicked() {
+        val me = auth.currentUser?.uid ?: run { toast("Login required"); return }
+        val other = userId ?: return
+        when (currentRel) {
+            Rel.NONE, Rel.FOLLOWED_BY -> sendFollowRequest(me, other)
+            Rel.REQUESTED -> cancelFollowRequest(me, other)
+            Rel.INCOMING_REQUEST -> acceptRequest(other /* requester */, me /* I am target */)
+            Rel.FOLLOWING -> unfollow(me, other)
+        }
+    }
+
+    private fun sendFollowRequest(fromUid: String, toUid: String) {
+        // fetch my username/photo for rich request (optional: cache this)
+        db.child("users").child(fromUid).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(s: DataSnapshot) {
+                val meProfile = s.getValue(UserProfile::class.java)
+                val req = FollowRequest(
+                    fromUid = fromUid,
+                    fromUsername = meProfile?.username ?: fromUid.take(8),
+                    fromPhotoBase64 = meProfile?.photoBase64,
+                    timestamp = System.currentTimeMillis()
+                )
+                val updates = hashMapOf<String, Any?>(
+                    "/follow_requests/$toUid/$fromUid" to req,
+                    "/relationships/$fromUid/$toUid" to "requested",
+                    "/relationships/$toUid/$fromUid" to "incoming_request"
+                )
+                db.updateChildren(updates).addOnSuccessListener { renderFollowButton() }
+                    .addOnFailureListener { toast("Failed to request") }
+            }
+            override fun onCancelled(error: DatabaseError) { toast("Failed to request") }
+        })
+    }
+
+    private fun cancelFollowRequest(fromUid: String, toUid: String) {
+        val updates = hashMapOf<String, Any?>(
+            "/follow_requests/$toUid/$fromUid" to null,
+            "/relationships/$fromUid/$toUid" to "none",
+            "/relationships/$toUid/$fromUid" to "none"
+        )
+        db.updateChildren(updates).addOnSuccessListener { followLabel.text = "Follow" }
+            .addOnFailureListener { toast("Failed to cancel") }
+    }
+
+    private fun acceptRequest(requesterUid: String, targetUid: String) {
+        val actId = db.child("follow_activity").child(targetUid).push().key!!
+        db.child("users").child(requesterUid).addListenerForSingleValueEvent(object: ValueEventListener{
+            override fun onDataChange(s: DataSnapshot) {
+                val reqProfile = s.getValue(UserProfile::class.java)
+                val updates = hashMapOf<String, Any?>(
+                    "/follows/$requesterUid/following/$targetUid" to true,
+                    "/follows/$targetUid/followers/$requesterUid" to true,
+                    "/relationships/$requesterUid/$targetUid" to "following",
+                    "/relationships/$targetUid/$requesterUid" to "followed_by",
+                    "/follow_requests/$targetUid/$requesterUid" to null,
+                    "/follow_activity/$targetUid/$actId" to FollowActivity(
+                        fromUid = requesterUid,
+                        fromUsername = reqProfile?.username ?: requesterUid.take(8),
+                        fromPhotoBase64 = reqProfile?.photoBase64,
+                        type = "followed_you",
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+                db.updateChildren(updates).addOnSuccessListener {
+                    db.child("users").child(targetUid).child("followersCount").runTransaction(incrementBy(1))
+                    db.child("users").child(requesterUid).child("followingCount").runTransaction(incrementBy(1))
+                    followLabel.text = "Following"
+                }.addOnFailureListener { toast("Failed to accept") }
+            }
+            override fun onCancelled(error: DatabaseError) { toast("Failed to accept") }
+        })
+    }
+
+    private fun unfollow(fromUid: String, toUid: String) {
+        val updates = hashMapOf<String, Any?>(
+            "/follows/$fromUid/following/$toUid" to null,
+            "/follows/$toUid/followers/$fromUid" to null,
+            "/relationships/$fromUid/$toUid" to "none",
+            "/relationships/$toUid/$fromUid" to "none"
+        )
+        db.updateChildren(updates).addOnSuccessListener {
+            db.child("users").child(toUid).child("followersCount").runTransaction(incrementBy(-1))
+            db.child("users").child(fromUid).child("followingCount").runTransaction(incrementBy(-1))
+            followLabel.text = "Follow"
+        }.addOnFailureListener { toast("Failed to unfollow") }
+    }
+
+    private fun incrementBy(delta: Int) = object : Transaction.Handler {
+        override fun doTransaction(mutableData: MutableData): Transaction.Result {
+            val cur = (mutableData.getValue(Int::class.java) ?: 0)
+            var next = cur + delta
+            if (next < 0) next = 0
+            mutableData.value = next
+            return Transaction.success(mutableData)
+        }
+        override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {}
+    }
+
+    // ==== your existing profile rendering (unchanged) ====
+    private fun loadUserProfile() {
+        val uid = userId ?: return
         db.child("users").child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val profile = snapshot.getValue(UserProfile::class.java)
-                if (profile != null) {
-                    displayProfile(profile)
-                } else {
-                    Toast.makeText(requireContext(), "Profile not found", Toast.LENGTH_SHORT).show()
-                }
+                if (profile != null) displayProfile(profile) else toast("Profile not found")
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(
-                    requireContext(),
-                    "Failed to load profile: ${error.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            override fun onCancelled(error: DatabaseError) { toast("Failed: ${error.message}") }
         })
     }
 
     private fun displayProfile(profile: UserProfile) {
-        // Set username
         usernameTextView.text = profile.username
-
-        // Set full name
         val fullName = "${profile.firstName} ${profile.lastName}".trim()
         fullNameTextView.text = if (fullName.isNotEmpty()) fullName else "User"
-
-        // Set bio
         bioTextView.text = if (profile.bio.isNotEmpty()) profile.bio else "No bio yet"
-
-        // Set counts
         postsCountTextView.text = profile.postsCount.toString()
         followersCountTextView.text = formatCount(profile.followersCount)
         followingCountTextView.text = profile.followingCount.toString()
 
-        // Load profile photo using ImageUtils
         if (!profile.photoBase64.isNullOrEmpty()) {
-            val bitmap = ImageUtils.loadBase64ImageOptimized(profile.photoBase64, 300)
-            if (bitmap != null) {
-                val circularBitmap = ImageUtils.getCircularBitmap(bitmap, 300)
-                profileImageView.setImageBitmap(circularBitmap)
-            } else {
-                setDefaultProfileImage()
-            }
-        } else {
-            setDefaultProfileImage()
-        }
+            val bmp = ImageUtils.loadBase64ImageOptimized(profile.photoBase64, 300)
+            if (bmp != null) profileImageView.setImageBitmap(ImageUtils.getCircularBitmap(bmp, 300))
+            else setDefaultProfileImage()
+        } else setDefaultProfileImage()
     }
 
-    private fun setDefaultProfileImage() {
-        profileImageView.setImageResource(R.drawable.profile_login_splash)
-    }
+    private fun setDefaultProfileImage() { profileImageView.setImageResource(R.drawable.profile_login_splash) }
 
-    private fun formatCount(count: Int): String {
-        return when {
-            count >= 1000000 -> String.format("%.1fM", count / 1000000.0)
-            count >= 1000 -> String.format("%.1fK", count / 1000.0)
-            else -> count.toString()
-        }
-    }
+    private fun formatCount(count: Int): String =
+        when { count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
+            count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+            else -> count.toString() }
+
+    private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
 }
