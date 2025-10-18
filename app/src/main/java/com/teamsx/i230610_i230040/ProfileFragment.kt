@@ -54,6 +54,20 @@ class ProfileFragment : Fragment() {
         postsCountTextView = view.findViewById(R.id.noposts)
         followersCountTextView = view.findViewById(R.id.nofollowers)
         followingCountTextView = view.findViewById(R.id.nofollowing)
+        // ProfileFragment.kt (add inside onViewCreated after findViewById)
+        val openFollowers = View.OnClickListener {
+            startActivity(Intent(requireContext(), FollowListActivity::class.java)
+                .putExtra(FollowListActivity.EXTRA_MODE, FollowListActivity.MODE_FOLLOWERS))
+        }
+        val openFollowing = View.OnClickListener {
+            startActivity(Intent(requireContext(), FollowListActivity::class.java)
+                .putExtra(FollowListActivity.EXTRA_MODE, FollowListActivity.MODE_FOLLOWING))
+        }
+
+        followersCountTextView.setOnClickListener(openFollowers)
+        view.findViewById<TextView>(R.id.followers).setOnClickListener(openFollowers)
+        followingCountTextView.setOnClickListener(openFollowing)
+        view.findViewById<TextView>(R.id.following).setOnClickListener(openFollowing)
 
         val editBtn = view.findViewById<Button>(R.id.editprofilebtn)
         editBtn.setOnClickListener {
