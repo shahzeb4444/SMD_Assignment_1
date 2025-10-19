@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,8 +20,12 @@ class HomeFragment : Fragment() {
     private val db by lazy { FirebaseDatabase.getInstance().reference }
 
     private lateinit var storiesRecyclerView: RecyclerView
+    private lateinit var postsRecyclerView: RecyclerView
     private lateinit var storiesAdapter: StoriesAdapter
+    private lateinit var postsAdapter: PostsAdapter
+
     private val storyGroups = mutableListOf<StoryGroup>()
+    private val posts = mutableListOf<Post>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -29,21 +34,23 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupExistingListeners(view)
+        setupTopBarListeners(view)
         setupStoriesRecyclerView(view)
+        setupPostsRecyclerView(view)
+
         loadStories()
+        loadPosts()
     }
 
     override fun onResume() {
         super.onResume()
-        // Reload stories when returning to fragment
         loadStories()
+        loadPosts()
     }
 
-    private fun setupExistingListeners(view: View) {
+    private fun setupTopBarListeners(view: View) {
         val messages = view.findViewById<ImageView>(R.id.messangerlogo)
         val cameraicon = view.findViewById<ImageView>(R.id.cameralogo)
-        val otheruserprofile = view.findViewById<ImageView>(R.id.mainprofile)
 
         cameraicon.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW).apply { type = "image/*" }
@@ -52,10 +59,6 @@ class HomeFragment : Fragment() {
 
         messages.setOnClickListener {
             startActivity(Intent(requireContext(), socialhomescreen4::class.java))
-        }
-
-        otheruserprofile.setOnClickListener {
-            navigateToUserProfile("demo_user_id", "joshua_l")
         }
     }
 
@@ -83,38 +86,56 @@ class HomeFragment : Fragment() {
         storiesRecyclerView.adapter = storiesAdapter
     }
 
+    private fun setupPostsRecyclerView(view: View) {
+        postsRecyclerView = view.findViewById(R.id.postsRecyclerView)
+        postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        val currentUserId = auth.currentUser?.uid ?: ""
+
+        postsAdapter = PostsAdapter(
+            posts = posts,
+            currentUserId = currentUserId,
+            onLikeClick = { post ->
+                toggleLike(post)
+            },
+            onCommentClick = { post ->
+                openComments(post)
+            },
+            onPostClick = { post ->
+                openPostView(post)
+            },
+            onProfileClick = { userId, username ->
+                navigateToUserProfile(userId, username)
+            }
+        )
+
+        postsRecyclerView.adapter = postsAdapter
+    }
+
     private fun loadStories() {
         val currentUserId = auth.currentUser?.uid ?: return
 
-        // Get list of users current user is following
         db.child("follows").child(currentUserId).child("following")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(followingSnapshot: DataSnapshot) {
                     val followingIds = followingSnapshot.children.mapNotNull { it.key }.toMutableList()
-
-                    // Add current user to the list to show their own stories
                     followingIds.add(0, currentUserId)
-
                     loadStoriesForUsers(followingIds, currentUserId)
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    // Handle error silently or show a message
-                }
+                override fun onCancelled(error: DatabaseError) {}
             })
     }
 
     private fun loadStoriesForUsers(userIds: List<String>, currentUserId: String) {
         storyGroups.clear()
-        storiesAdapter.notifyDataSetChanged() // Clear existing items immediately
+        storiesAdapter.notifyDataSetChanged()
 
         val tempStoryGroups = mutableListOf<StoryGroup>()
         val storiesRef = db.child("stories")
         var processedCount = 0
 
-        if (userIds.isEmpty()) {
-            return
-        }
+        if (userIds.isEmpty()) return
 
         for (userId in userIds) {
             storiesRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -128,18 +149,13 @@ class HomeFragment : Fragment() {
                         }
                     }
 
-                    // Sort stories by timestamp (oldest first)
                     userStories.sortBy { it.timestamp }
-
-                    // Check if user has unviewed stories
                     val hasUnviewed = userStories.any { !it.isViewedBy(currentUserId) }
 
-                    // Get user info
                     db.child("users").child(userId).get()
                         .addOnSuccessListener { userSnapshot ->
                             val userProfile = userSnapshot.getValue(UserProfile::class.java)
 
-                            // Always add current user (even with no stories)
                             if (userId == currentUserId) {
                                 val storyGroup = StoryGroup(
                                     userId = userId,
@@ -149,12 +165,10 @@ class HomeFragment : Fragment() {
                                     hasUnviewedStories = false
                                 )
                                 synchronized(tempStoryGroups) {
-                                    // Remove any existing entry for this user (prevent duplicates)
                                     tempStoryGroups.removeAll { it.userId == userId }
                                     tempStoryGroups.add(storyGroup)
                                 }
                             } else if (userStories.isNotEmpty()) {
-                                // Only add other users if they have stories
                                 val storyGroup = StoryGroup(
                                     userId = userId,
                                     username = userProfile?.username ?: "User",
@@ -163,7 +177,6 @@ class HomeFragment : Fragment() {
                                     hasUnviewedStories = hasUnviewed
                                 )
                                 synchronized(tempStoryGroups) {
-                                    // Remove any existing entry for this user (prevent duplicates)
                                     tempStoryGroups.removeAll { it.userId == userId }
                                     tempStoryGroups.add(storyGroup)
                                 }
@@ -171,7 +184,6 @@ class HomeFragment : Fragment() {
 
                             processedCount++
                             if (processedCount == userIds.size) {
-                                // All users processed, update adapter ONCE
                                 updateStoriesUI(tempStoryGroups, currentUserId)
                             }
                         }
@@ -194,11 +206,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateStoriesUI(tempStoryGroups: List<StoryGroup>, currentUserId: String) {
-        // Sort: Current user first, then unviewed stories, then viewed stories
         val sorted = tempStoryGroups.sortedWith(compareBy(
-            { it.userId != currentUserId }, // Current user first
-            { !it.hasUnviewedStories },     // Unviewed stories next
-            { it.username }                  // Then alphabetically
+            { it.userId != currentUserId },
+            { !it.hasUnviewedStories },
+            { it.username }
         ))
 
         storyGroups.clear()
@@ -206,18 +217,156 @@ class HomeFragment : Fragment() {
         storiesAdapter.notifyDataSetChanged()
     }
 
+    private fun loadPosts() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        db.child("follows").child(currentUserId).child("following")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(followingSnapshot: DataSnapshot) {
+                    val followingIds = followingSnapshot.children.mapNotNull { it.key }.toMutableList()
+                    followingIds.add(currentUserId)
+                    loadPostsForUsers(followingIds)
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
+
+    private fun loadPostsForUsers(userIds: List<String>) {
+        posts.clear()
+        postsAdapter.notifyDataSetChanged()
+
+        val tempPosts = mutableListOf<Post>()
+        var processedCount = 0
+
+        if (userIds.isEmpty()) return
+
+        for (userId in userIds) {
+            db.child("userPosts").child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val postIds = snapshot.children.mapNotNull { it.key }
+
+                    var userPostsProcessed = 0
+                    if (postIds.isEmpty()) {
+                        processedCount++
+                        if (processedCount == userIds.size) {
+                            updatePostsUI(tempPosts)
+                        }
+                        return
+                    }
+
+                    for (postId in postIds) {
+                        db.child("posts").child(postId).get()
+                            .addOnSuccessListener { postSnapshot ->
+                                val post = postSnapshot.getValue(Post::class.java)
+                                if (post != null) {
+                                    synchronized(tempPosts) {
+                                        tempPosts.add(post)
+                                    }
+                                }
+
+                                userPostsProcessed++
+                                if (userPostsProcessed == postIds.size) {
+                                    processedCount++
+                                    if (processedCount == userIds.size) {
+                                        updatePostsUI(tempPosts)
+                                    }
+                                }
+                            }
+                            .addOnFailureListener {
+                                userPostsProcessed++
+                                if (userPostsProcessed == postIds.size) {
+                                    processedCount++
+                                    if (processedCount == userIds.size) {
+                                        updatePostsUI(tempPosts)
+                                    }
+                                }
+                            }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    processedCount++
+                    if (processedCount == userIds.size) {
+                        updatePostsUI(tempPosts)
+                    }
+                }
+            })
+        }
+    }
+
+    private fun updatePostsUI(tempPosts: List<Post>) {
+        val sorted = tempPosts.sortedByDescending { it.timestamp }
+        posts.clear()
+        posts.addAll(sorted)
+        postsAdapter.notifyDataSetChanged()
+    }
+
+    private fun toggleLike(post: Post) {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        val likesRef = db.child("posts").child(post.postId).child("likes")
+
+        if (post.isLikedBy(currentUserId)) {
+            // Unlike
+            likesRef.child(currentUserId).removeValue()
+                .addOnSuccessListener {
+                    // Update only the specific post in the list
+                    updateSinglePost(post.postId)
+                }
+        } else {
+            // Like
+            likesRef.child(currentUserId).setValue(true)
+                .addOnSuccessListener {
+                    // Update only the specific post in the list
+                    updateSinglePost(post.postId)
+                }
+        }
+    }
+
+    private fun updateSinglePost(postId: String) {
+        db.child("posts").child(postId).get()
+            .addOnSuccessListener { snapshot ->
+                val updatedPost = snapshot.getValue(Post::class.java)
+                if (updatedPost != null) {
+                    // Find the index of the post in the list
+                    val index = posts.indexOfFirst { it.postId == postId }
+                    if (index != -1) {
+                        // Update only that specific post
+                        posts[index] = updatedPost
+                        postsAdapter.notifyItemChanged(index)
+                    }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to update post", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun openComments(post: Post) {
+        val intent = Intent(requireContext(), CommentsActivity::class.java).apply {
+            putExtra("post_id", post.postId)
+        }
+        startActivity(intent)
+    }
+
+    private fun openPostView(post: Post) {
+        val intent = Intent(requireContext(), PostViewActivity::class.java).apply {
+            putExtra("post_id", post.postId)
+        }
+        startActivity(intent)
+    }
+
     private fun openStoryViewer(storyGroup: StoryGroup) {
         val currentUserId = auth.currentUser?.uid ?: return
 
         if (storyGroup.userId == currentUserId) {
-            // Open own story viewer
             val intent = Intent(requireContext(), socialhomescreen14::class.java).apply {
                 putExtra("user_id", storyGroup.userId)
                 putExtra("username", storyGroup.username)
             }
             startActivity(intent)
         } else {
-            // Open other user's story viewer
             val intent = Intent(requireContext(), socialhomescreen12::class.java).apply {
                 putExtra("user_id", storyGroup.userId)
                 putExtra("username", storyGroup.username)
