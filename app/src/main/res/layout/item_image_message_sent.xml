@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/messageContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Timestamp (Shown on swipe) -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/timestampText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:text="12:30"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"
+        android:alpha="0"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Image Bubble -->
+    <FrameLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/rounded_message_sent">
+
+        <ImageView
+            android:id="@+id/messageImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Message image" />
+
+    </FrameLayout>
+
+</FrameLayout>

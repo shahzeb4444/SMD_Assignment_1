@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- Header with Back, Title, and Call Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -14,6 +15,7 @@
         android:layout_marginTop="10dp"
         android:elevation="4dp">
 
+        <!-- Back Button -->
         <ImageView
             android:id="@+id/cameralogo"
             android:layout_width="24dp"
@@ -21,6 +23,7 @@
             android:src="@drawable/leftshortarrow"
             android:contentDescription="Back" />
 
+        <!-- Chat Header Title -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -30,14 +33,25 @@
             android:textStyle="bold"
             android:layout_marginStart="16dp" />
 
+        <!-- Voice Call Button -->
         <ImageView
             android:id="@+id/call"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/speakericon"
-            android:contentDescription="Call" />
+            android:src="@drawable/callicon"
+            android:contentDescription="Voice Call"
+            android:layout_marginEnd="12dp" />
+
+        <!-- Video Call Button -->
+        <ImageView
+            android:id="@+id/videoCall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/videocameraicon"
+            android:contentDescription="Video Call" />
     </LinearLayout>
 
+    <!-- Messages RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
@@ -45,6 +59,7 @@
         android:layout_weight="1"
         android:paddingVertical="8dp" />
 
+    <!-- Message Input Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -53,6 +68,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp">
 
+        <!-- Message Input EditText -->
         <EditText
             android:id="@+id/messageInput"
             android:layout_width="0dp"
@@ -63,6 +79,7 @@
             android:paddingHorizontal="12dp"
             android:textSize="14sp" />
 
+        <!-- Send Button -->
         <ImageView
             android:id="@+id/sendButton"
             android:layout_width="40dp"

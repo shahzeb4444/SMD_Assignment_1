@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/messageContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Timestamp (Shown on swipe) -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/timestampText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:text="12:30"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"
+        android:alpha="0"
+        android:layout_marginStart="8dp" />
+
+    <!-- Post Bubble -->
+    <LinearLayout
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:background="@drawable/rounded_message_received"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:layout_marginStart="16dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/postTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📌 Shared Post"
+            android:textColor="@android:color/black"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/postContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</FrameLayout>
