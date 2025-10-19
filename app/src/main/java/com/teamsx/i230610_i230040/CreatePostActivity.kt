@@ -27,7 +27,7 @@ class CreatePostActivity : AppCompatActivity() {
         val btnCancel = findViewById<TextView>(R.id.btnCancel)
 
         btnPost.setOnClickListener {
-            Toast.makeText(this, "Post feature coming soon", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, CreatePostScreen::class.java))
         }
 
         btnStory.setOnClickListener {

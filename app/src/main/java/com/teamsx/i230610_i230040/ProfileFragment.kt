@@ -17,6 +17,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -36,6 +38,10 @@ class ProfileFragment : Fragment() {
     private lateinit var postsCountTextView: TextView
     private lateinit var followersCountTextView: TextView
     private lateinit var followingCountTextView: TextView
+    private lateinit var postsGridRecyclerView: RecyclerView
+
+    private lateinit var profileGridAdapter: ProfileGridAdapter
+    private val userPosts = mutableListOf<Post>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,7 +52,20 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize views
+        initViews(view)
+        setupClickListeners(view)
+        setupPostsGrid(view)
+        loadUserProfile()
+        loadUserPosts()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadUserProfile()
+        loadUserPosts()
+    }
+
+    private fun initViews(view: View) {
         profileImageView = view.findViewById(R.id.profileicon)
         usernameTextView = view.findViewById(R.id.jacobtext)
         fullNameTextView = view.findViewById(R.id.profileusername)
@@ -54,7 +73,10 @@ class ProfileFragment : Fragment() {
         postsCountTextView = view.findViewById(R.id.noposts)
         followersCountTextView = view.findViewById(R.id.nofollowers)
         followingCountTextView = view.findViewById(R.id.nofollowing)
-        // ProfileFragment.kt (add inside onViewCreated after findViewById)
+        postsGridRecyclerView = view.findViewById(R.id.postsGridRecyclerView)
+    }
+
+    private fun setupClickListeners(view: View) {
         val openFollowers = View.OnClickListener {
             startActivity(Intent(requireContext(), FollowListActivity::class.java)
                 .putExtra(FollowListActivity.EXTRA_MODE, FollowListActivity.MODE_FOLLOWERS))
@@ -84,15 +106,19 @@ class ProfileFragment : Fragment() {
                 startActivity(Intent(requireContext(), socialhomescreen13::class.java))
             }
         }
-
-        // Load user profile data
-        loadUserProfile()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Reload profile when returning from edit screen
-        loadUserProfile()
+    private fun setupPostsGrid(view: View) {
+        postsGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
+
+        profileGridAdapter = ProfileGridAdapter(
+            posts = userPosts,
+            onPostClick = { post ->
+                openPostView(post)
+            }
+        )
+
+        postsGridRecyclerView.adapter = profileGridAdapter
     }
 
     private fun loadUserProfile() {
@@ -122,23 +148,76 @@ class ProfileFragment : Fragment() {
         })
     }
 
+    private fun loadUserPosts() {
+        val uid = auth.currentUser?.uid ?: return
+
+        db.child("userPosts").child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                userPosts.clear()
+
+                val postIds = snapshot.children.mapNotNull { it.key }
+
+                if (postIds.isEmpty()) {
+                    profileGridAdapter.notifyDataSetChanged()
+                    return
+                }
+
+                val tempPosts = mutableListOf<Post>()
+                var processedCount = 0
+
+                for (postId in postIds) {
+                    db.child("posts").child(postId).get()
+                        .addOnSuccessListener { postSnapshot ->
+                            val post = postSnapshot.getValue(Post::class.java)
+                            if (post != null) {
+                                synchronized(tempPosts) {
+                                    tempPosts.add(post)
+                                }
+                            }
+
+                            processedCount++
+                            if (processedCount == postIds.size) {
+                                // Sort by timestamp (newest first)
+                                tempPosts.sortByDescending { it.timestamp }
+                                userPosts.clear()
+                                userPosts.addAll(tempPosts)
+                                profileGridAdapter.notifyDataSetChanged()
+                            }
+                        }
+                        .addOnFailureListener {
+                            processedCount++
+                            if (processedCount == postIds.size) {
+                                tempPosts.sortByDescending { it.timestamp }
+                                userPosts.clear()
+                                userPosts.addAll(tempPosts)
+                                profileGridAdapter.notifyDataSetChanged()
+                            }
+                        }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    requireContext(),
+                    "Failed to load posts",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+
     private fun displayProfile(profile: UserProfile) {
-        // Set username
         usernameTextView.text = profile.username
 
-        // Set full name
         val fullName = "${profile.firstName} ${profile.lastName}".trim()
         fullNameTextView.text = if (fullName.isNotEmpty()) fullName else "User"
 
-        // Set bio (use first bio field, you can add more fields if needed)
         bioTextView.text = if (profile.bio.isNotEmpty()) profile.bio else "No bio yet"
 
-        // Set counts
         postsCountTextView.text = profile.postsCount.toString()
         followersCountTextView.text = formatCount(profile.followersCount)
         followingCountTextView.text = profile.followingCount.toString()
 
-        // Load profile photo
         loadProfilePhoto(profile.photoBase64)
     }
 
@@ -148,7 +227,6 @@ class ProfileFragment : Fragment() {
                 val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 if (bitmap != null) {
-                    // Create circular bitmap
                     val circularBitmap = getCircularBitmap(bitmap)
                     profileImageView.setImageBitmap(circularBitmap)
                 } else {
@@ -168,7 +246,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun getCircularBitmap(bitmap: Bitmap): Bitmap {
-        val size = 300 // Size in pixels
+        val size = 300
         val scaled = Bitmap.createScaledBitmap(bitmap, size, size, true)
 
         val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -190,5 +268,12 @@ class ProfileFragment : Fragment() {
             count >= 1000 -> String.format("%.1fK", count / 1000.0)
             else -> count.toString()
         }
+    }
+
+    private fun openPostView(post: Post) {
+        val intent = Intent(requireContext(), PostViewActivity::class.java).apply {
+            putExtra("post_id", post.postId)
+        }
+        startActivity(intent)
     }
 }

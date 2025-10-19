@@ -12,6 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SMD_Assignment_1">
         <activity
+            android:name=".PostViewActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CommentsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreatePostScreen"
+            android:exported="false" />
+        <activity
             android:name=".CreatePostActivity"
             android:exported="false" />
         <activity

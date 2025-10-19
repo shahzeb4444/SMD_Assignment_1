@@ -1,5 +1,6 @@
 package com.teamsx.i230610_i230040
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -32,6 +35,10 @@ class OtherUserProfileFragment : Fragment() {
     private lateinit var followButtonBg: ImageView
     private lateinit var followLabel: TextView
     private lateinit var backArrow: ImageView
+    private lateinit var postsGridRecyclerView: RecyclerView
+
+    private lateinit var profileGridAdapter: ProfileGridAdapter
+    private val userPosts = mutableListOf<Post>()
 
     private var userId: String? = null
     private var username: String? = null
@@ -52,25 +59,13 @@ class OtherUserProfileFragment : Fragment() {
         inflater.inflate(R.layout.fragment_other_user_profile, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        profileImageView = view.findViewById(R.id.profileicon)
-        usernameTextView = view.findViewById(R.id.jacobtext)
-        fullNameTextView = view.findViewById(R.id.profileusername)
-        bioTextView = view.findViewById(R.id.d1)
-        postsCountTextView = view.findViewById(R.id.noposts)
-        followersCountTextView = view.findViewById(R.id.nofollowers)
-        followingCountTextView = view.findViewById(R.id.nofollowing)
-        followButtonBg = view.findViewById(R.id.feedbutton1)
-        followLabel = view.findViewById(R.id.followLabel)
-        backArrow = view.findViewById(R.id.leftarrow)
-
-        backArrow.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
-
-        val clickFollow: (View) -> Unit = { onFollowClicked() }
-        followButtonBg.setOnClickListener(clickFollow)
-        followLabel.setOnClickListener(clickFollow)
+        initViews(view)
+        setupClickListeners()
+        setupPostsGrid()
 
         observeRelationship()
         loadUserProfile()
+        loadUserPosts()
     }
 
     override fun onDestroyView() {
@@ -82,6 +77,106 @@ class OtherUserProfileFragment : Fragment() {
                 db.child("relationships").child(me).child(other).removeEventListener(it)
             }
         }
+    }
+
+    private fun initViews(view: View) {
+        profileImageView = view.findViewById(R.id.profileicon)
+        usernameTextView = view.findViewById(R.id.jacobtext)
+        fullNameTextView = view.findViewById(R.id.profileusername)
+        bioTextView = view.findViewById(R.id.d1)
+        postsCountTextView = view.findViewById(R.id.noposts)
+        followersCountTextView = view.findViewById(R.id.nofollowers)
+        followingCountTextView = view.findViewById(R.id.nofollowing)
+        followButtonBg = view.findViewById(R.id.feedbutton1)
+        followLabel = view.findViewById(R.id.followLabel)
+        backArrow = view.findViewById(R.id.leftarrow)
+        postsGridRecyclerView = view.findViewById(R.id.postsGridRecyclerView)
+    }
+
+    private fun setupClickListeners() {
+        backArrow.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+
+        val clickFollow: (View) -> Unit = { onFollowClicked() }
+        followButtonBg.setOnClickListener(clickFollow)
+        followLabel.setOnClickListener(clickFollow)
+    }
+
+    private fun setupPostsGrid() {
+        postsGridRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
+
+        profileGridAdapter = ProfileGridAdapter(
+            posts = userPosts,
+            onPostClick = { post ->
+                openPostView(post)
+            }
+        )
+
+        postsGridRecyclerView.adapter = profileGridAdapter
+    }
+
+    private fun loadUserPosts() {
+        val uid = userId ?: return
+
+        db.child("userPosts").child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                userPosts.clear()
+
+                val postIds = snapshot.children.mapNotNull { it.key }
+
+                if (postIds.isEmpty()) {
+                    profileGridAdapter.notifyDataSetChanged()
+                    return
+                }
+
+                val tempPosts = mutableListOf<Post>()
+                var processedCount = 0
+
+                for (postId in postIds) {
+                    db.child("posts").child(postId).get()
+                        .addOnSuccessListener { postSnapshot ->
+                            val post = postSnapshot.getValue(Post::class.java)
+                            if (post != null) {
+                                synchronized(tempPosts) {
+                                    tempPosts.add(post)
+                                }
+                            }
+
+                            processedCount++
+                            if (processedCount == postIds.size) {
+                                // Sort by timestamp (newest first)
+                                tempPosts.sortByDescending { it.timestamp }
+                                userPosts.clear()
+                                userPosts.addAll(tempPosts)
+                                profileGridAdapter.notifyDataSetChanged()
+                            }
+                        }
+                        .addOnFailureListener {
+                            processedCount++
+                            if (processedCount == postIds.size) {
+                                tempPosts.sortByDescending { it.timestamp }
+                                userPosts.clear()
+                                userPosts.addAll(tempPosts)
+                                profileGridAdapter.notifyDataSetChanged()
+                            }
+                        }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    requireContext(),
+                    "Failed to load posts",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+
+    private fun openPostView(post: Post) {
+        val intent = Intent(requireContext(), PostViewActivity::class.java).apply {
+            putExtra("post_id", post.postId)
+        }
+        startActivity(intent)
     }
 
     private fun observeRelationship() {
@@ -211,7 +306,7 @@ class OtherUserProfileFragment : Fragment() {
         override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {}
     }
 
-    // ==== your existing profile rendering (unchanged) ====
+    // ==== Profile rendering ====
     private fun loadUserProfile() {
         val uid = userId ?: return
         db.child("users").child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -239,12 +334,16 @@ class OtherUserProfileFragment : Fragment() {
         } else setDefaultProfileImage()
     }
 
-    private fun setDefaultProfileImage() { profileImageView.setImageResource(R.drawable.profile_login_splash) }
+    private fun setDefaultProfileImage() {
+        profileImageView.setImageResource(R.drawable.profile_login_splash)
+    }
 
     private fun formatCount(count: Int): String =
-        when { count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
+        when {
+            count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
             count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
-            else -> count.toString() }
+            else -> count.toString()
+        }
 
     private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
 }
