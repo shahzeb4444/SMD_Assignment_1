@@ -16,6 +16,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import android.graphics.BitmapFactory
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 
 class HomeActivity : AppCompatActivity() {
 
@@ -45,7 +48,7 @@ class HomeActivity : AppCompatActivity() {
         bottom.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_create -> {
-                    startActivity(Intent(this, socialhomescreen17::class.java))
+                    startActivity(Intent(this, CreatePostActivity::class.java))
                     // return false so selection stays on current tab
                     false
                 }
@@ -65,6 +68,9 @@ class HomeActivity : AppCompatActivity() {
 
         // Load and set the profile icon from Firebase (Base64)
         loadProfileIconIntoBottomNav(bottom)
+        cleanExpiredStories()
+
+
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -115,6 +121,29 @@ class HomeActivity : AppCompatActivity() {
                 .takeIf { it != 0 }
                 ?.let { destId -> bottom.selectedItemId = destId }
         }
+    }
+    private fun cleanExpiredStories() {
+        val currentTime = System.currentTimeMillis()
+
+        db.child("stories").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (userSnap in snapshot.children) {
+                    val userId = userSnap.key ?: continue
+
+                    for (storySnap in userSnap.children) {
+                        val story = storySnap.getValue(Story::class.java)
+                        if (story != null && currentTime > story.expiresAt) {
+                            // Delete expired story
+                            db.child("stories").child(userId).child(story.storyId).removeValue()
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Silently fail
+            }
+        })
     }
 
     private fun loadProfileIconIntoBottomNav(bottom: BottomNavigationView) {

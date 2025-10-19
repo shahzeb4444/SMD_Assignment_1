@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SMD_Assignment_1">
         <activity
+            android:name=".CreatePostActivity"
+            android:exported="false" />
+        <activity
             android:name=".FollowListActivity"
             android:exported="false" />
         <activity
