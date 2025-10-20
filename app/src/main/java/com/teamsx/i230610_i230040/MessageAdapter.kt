@@ -1,4 +1,4 @@
-// 4. MESSAGE ADAPTER
+// 4. ENHANCED MESSAGE ADAPTER WITH MEDIA
 package com.teamsx.i230610_i230040
 
 import android.view.LayoutInflater
@@ -7,6 +7,8 @@ import android.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import android.widget.FrameLayout
+import android.widget.ImageView
+import com.bumptech.glide.Glide
 
 class MessageAdapter(
     private val messages: List<Message>,
@@ -19,8 +21,16 @@ class MessageAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(if (viewType == 1) R.layout.item_message_sent else R.layout.item_message_received, parent, false)
+        val layoutId = when {
+            viewType == 1 && messages[parent.childCount].mediaType.isNotEmpty() ->
+                R.layout.item_message_sent_media
+            viewType == 1 -> R.layout.item_message_sent
+            messages[parent.childCount].mediaType.isNotEmpty() ->
+                R.layout.item_message_received_media
+            else -> R.layout.item_message_received
+        }
+
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         return MessageViewHolder(view, onMessageAction)
     }
 
@@ -31,22 +41,63 @@ class MessageAdapter(
     override fun getItemCount() = messages.size
 }
 
-class MessageViewHolder(itemView: android.view.View, private val onMessageAction: (Message, String) -> Unit) :
-    RecyclerView.ViewHolder(itemView) {
+class MessageViewHolder(
+    itemView: android.view.View,
+    private val onMessageAction: (Message, String) -> Unit
+) : RecyclerView.ViewHolder(itemView) {
 
-    private val messageText: MaterialTextView = itemView.findViewById(R.id.messageText)
-    private val timestampText: MaterialTextView = itemView.findViewById(R.id.timestampText)
-    private val messageContainer: FrameLayout = itemView.findViewById(R.id.messageContainer)
+    private val messageText: MaterialTextView? = itemView.findViewById(R.id.messageText)
+    private val timestampText: MaterialTextView? = itemView.findViewById(R.id.timestampText)
+    private val messageContainer: FrameLayout? = itemView.findViewById(R.id.messageContainer)
+    private val mediaImageView: ImageView? = itemView.findViewById(R.id.mediaImageView)
+    private val mediaCaptionText: MaterialTextView? = itemView.findViewById(R.id.mediaCaptionText)
+    private val mediaContainer: FrameLayout? = itemView.findViewById(R.id.mediaContainer)
 
     fun bind(message: Message) {
-        messageText.text = if (message.isDeleted) message.text else message.text
+        // Handle text messages
+        if (message.mediaType.isEmpty()) {
+            messageText?.text = if (message.isDeleted) message.text else message.text
+            messageText?.visibility = android.view.View.VISIBLE
+            mediaContainer?.visibility = android.view.View.GONE
+        } else {
+            // Handle media messages
+            messageText?.visibility = android.view.View.GONE
+            mediaContainer?.visibility = android.view.View.VISIBLE
+
+            if (mediaImageView != null && message.mediaUrl.isNotEmpty()) {
+                Glide.with(itemView.context)
+                    .load(message.mediaUrl)
+                    .centerCrop()
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .into(mediaImageView)
+            }
+
+            if (message.mediaCaption.isNotEmpty()) {
+                mediaCaptionText?.text = message.mediaCaption
+                mediaCaptionText?.visibility = android.view.View.VISIBLE
+            } else {
+                mediaCaptionText?.visibility = android.view.View.GONE
+            }
+        }
 
         val editedLabel = if (message.isEdited) " (edited)" else ""
-        timestampText.text = formatTime(message.timestamp) + editedLabel
+        timestampText?.text = formatTime(message.timestamp) + editedLabel
 
-        messageContainer.setOnLongClickListener {
+        messageContainer?.setOnLongClickListener {
             val currentTime = System.currentTimeMillis()
-            val timeDifference = (currentTime - message.timestamp) / 1000 / 60 // minutes
+            val timeDifference = (currentTime - message.timestamp) / 1000 / 60
+
+            if (timeDifference <= 5 && !message.isDeleted) {
+                showMessageMenu(it, message)
+                true
+            } else {
+                false
+            }
+        }
+
+        mediaContainer?.setOnLongClickListener {
+            val currentTime = System.currentTimeMillis()
+            val timeDifference = (currentTime - message.timestamp) / 1000 / 60
 
             if (timeDifference <= 5 && !message.isDeleted) {
                 showMessageMenu(it, message)
@@ -64,7 +115,9 @@ class MessageViewHolder(itemView: android.view.View, private val onMessageAction
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.edit_message -> {
-                    onMessageAction(message, "EDIT")
+                    if (message.mediaType.isEmpty()) {
+                        onMessageAction(message, "EDIT")
+                    }
                     true
                 }
                 R.id.delete_message -> {
