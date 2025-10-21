@@ -1,137 +1,146 @@
-// 4. ENHANCED MESSAGE ADAPTER WITH MEDIA
 package com.teamsx.i230610_i230040
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
-import android.widget.FrameLayout
-import android.widget.ImageView
-import com.bumptech.glide.Glide
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MessageAdapter(
     private val messages: List<Message>,
     private val currentUserId: String,
     private val onMessageAction: (Message, String) -> Unit
-) : RecyclerView.Adapter<MessageViewHolder>() {
+) : RecyclerView.Adapter<MessageAdapter.VH>() {
+
+    private companion object {
+        const val SENT_TEXT = 1
+        const val SENT_MEDIA = 2
+        const val RECV_TEXT = 3
+        const val RECV_MEDIA = 4
+    }
 
     override fun getItemViewType(position: Int): Int {
-        return if (messages[position].senderId == currentUserId) 1 else 0
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-        val layoutId = when {
-            viewType == 1 && messages[parent.childCount].mediaType.isNotEmpty() ->
-                R.layout.item_message_sent_media
-            viewType == 1 -> R.layout.item_message_sent
-            messages[parent.childCount].mediaType.isNotEmpty() ->
-                R.layout.item_message_received_media
-            else -> R.layout.item_message_received
+        val m = messages[position]
+        val mine = m.senderId == currentUserId
+        val hasMedia = m.mediaType.isNotEmpty() && m.mediaUrl.isNotEmpty()
+        return when {
+            mine && hasMedia -> SENT_MEDIA
+            mine && !hasMedia -> SENT_TEXT
+            !mine && hasMedia -> RECV_MEDIA
+            else -> RECV_TEXT
         }
-
-        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-        return MessageViewHolder(view, onMessageAction)
     }
 
-    override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val layoutId = when (viewType) {
+            SENT_MEDIA -> R.layout.item_message_sent_media
+            SENT_TEXT  -> R.layout.item_message_sent
+            RECV_MEDIA -> R.layout.item_message_received_media
+            else       -> R.layout.item_message_received
+        }
+        val v = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+        return VH(v, onMessageAction)
+    }
+
+    override fun onBindViewHolder(holder: VH, position: Int) {
         holder.bind(messages[position])
     }
 
     override fun getItemCount() = messages.size
-}
 
-class MessageViewHolder(
-    itemView: android.view.View,
-    private val onMessageAction: (Message, String) -> Unit
-) : RecyclerView.ViewHolder(itemView) {
+    class VH(
+        itemView: View,
+        private val onMessageAction: (Message, String) -> Unit
+    ) : RecyclerView.ViewHolder(itemView) {
 
-    private val messageText: MaterialTextView? = itemView.findViewById(R.id.messageText)
-    private val timestampText: MaterialTextView? = itemView.findViewById(R.id.timestampText)
-    private val messageContainer: FrameLayout? = itemView.findViewById(R.id.messageContainer)
-    private val mediaImageView: ImageView? = itemView.findViewById(R.id.mediaImageView)
-    private val mediaCaptionText: MaterialTextView? = itemView.findViewById(R.id.mediaCaptionText)
-    private val mediaContainer: FrameLayout? = itemView.findViewById(R.id.mediaContainer)
+        private val messageText: MaterialTextView? = itemView.findViewById(R.id.messageText)
+        private val timestampText: MaterialTextView? = itemView.findViewById(R.id.timestampText)
+        private val messageContainer: FrameLayout? = itemView.findViewById(R.id.messageContainer)
 
-    fun bind(message: Message) {
-        // Handle text messages
-        if (message.mediaType.isEmpty()) {
-            messageText?.text = if (message.isDeleted) message.text else message.text
-            messageText?.visibility = android.view.View.VISIBLE
-            mediaContainer?.visibility = android.view.View.GONE
-        } else {
-            // Handle media messages
-            messageText?.visibility = android.view.View.GONE
-            mediaContainer?.visibility = android.view.View.VISIBLE
+        // present only in *_media layouts (will be null for text-only rows)
+        private val mediaContainer: FrameLayout? = itemView.findViewById(R.id.mediaContainer)
+        private val mediaImageView: ImageView? = itemView.findViewById(R.id.mediaImageView)
+        private val mediaCaptionText: MaterialTextView? = itemView.findViewById(R.id.mediaCaptionText)
 
-            if (mediaImageView != null && message.mediaUrl.isNotEmpty()) {
-                Glide.with(itemView.context)
-                    .load(message.mediaUrl)
-                    .centerCrop()
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .into(mediaImageView)
-            }
+        fun bind(m: Message) {
+            val isMedia = m.mediaType.isNotEmpty() && m.mediaUrl.isNotEmpty()
 
-            if (message.mediaCaption.isNotEmpty()) {
-                mediaCaptionText?.text = message.mediaCaption
-                mediaCaptionText?.visibility = android.view.View.VISIBLE
-            } else {
-                mediaCaptionText?.visibility = android.view.View.GONE
-            }
-        }
+            if (isMedia) {
+                // hide text, show media
+                messageText?.visibility = View.GONE
+                mediaContainer?.visibility = View.VISIBLE
 
-        val editedLabel = if (message.isEdited) " (edited)" else ""
-        timestampText?.text = formatTime(message.timestamp) + editedLabel
-
-        messageContainer?.setOnLongClickListener {
-            val currentTime = System.currentTimeMillis()
-            val timeDifference = (currentTime - message.timestamp) / 1000 / 60
-
-            if (timeDifference <= 5 && !message.isDeleted) {
-                showMessageMenu(it, message)
-                true
-            } else {
-                false
-            }
-        }
-
-        mediaContainer?.setOnLongClickListener {
-            val currentTime = System.currentTimeMillis()
-            val timeDifference = (currentTime - message.timestamp) / 1000 / 60
-
-            if (timeDifference <= 5 && !message.isDeleted) {
-                showMessageMenu(it, message)
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun showMessageMenu(view: android.view.View, message: Message) {
-        val popup = PopupMenu(view.context, view)
-        popup.menuInflater.inflate(R.menu.message_menu, popup.menu)
-
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.edit_message -> {
-                    if (message.mediaType.isEmpty()) {
-                        onMessageAction(message, "EDIT")
-                    }
-                    true
+                // decode Base64 into Bitmap
+                val bmp = decodeBase64(m.mediaUrl)
+                if (bmp != null) {
+                    mediaImageView?.setImageBitmap(bmp)
+                } else {
+                    // optional: show a placeholder
+                    mediaImageView?.setImageResource(android.R.drawable.ic_menu_report_image)
                 }
-                R.id.delete_message -> {
-                    onMessageAction(message, "DELETE")
-                    true
+
+                if (m.mediaCaption.isNotEmpty()) {
+                    mediaCaptionText?.text = m.mediaCaption
+                    mediaCaptionText?.visibility = View.VISIBLE
+                } else {
+                    mediaCaptionText?.visibility = View.GONE
                 }
-                else -> false
+            } else {
+                // text message
+                messageText?.text = m.text
+                messageText?.visibility = View.VISIBLE
+                mediaContainer?.visibility = View.GONE
+            }
+
+            val edited = if (m.isEdited) " (edited)" else ""
+            timestampText?.text = formatTime(m.timestamp) + edited
+
+            val longClickTarget: View = mediaContainer ?: messageContainer ?: itemView
+            longClickTarget.setOnLongClickListener {
+                // 5-min edit/delete window and not deleted
+                val minutes = (System.currentTimeMillis() - m.timestamp) / 1000 / 60
+                if (minutes <= 5 && !m.isDeleted) {
+                    showMenu(it, m, canEdit = !isMedia) // text-only messages can be edited
+                    true
+                } else false
             }
         }
-        popup.show()
-    }
 
-    private fun formatTime(timestamp: Long): String {
-        val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(timestamp))
+        private fun showMenu(anchor: View, m: Message, canEdit: Boolean) {
+            val popup = PopupMenu(anchor.context, anchor)
+            popup.menuInflater.inflate(R.menu.message_menu, popup.menu)
+            // Hide "Edit" for media messages
+            if (!canEdit) popup.menu.findItem(R.id.edit_message)?.isVisible = false
+
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.edit_message -> { onMessageAction(m, "EDIT"); true }
+                    R.id.delete_message -> { onMessageAction(m, "DELETE"); true }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+
+        private fun decodeBase64(b64: String): android.graphics.Bitmap? {
+            return try {
+                val bytes = Base64.decode(b64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } catch (_: Exception) {
+                null
+            }
+        }
+
+        private fun formatTime(ts: Long): String {
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+            return sdf.format(Date(ts))
+        }
     }
 }
