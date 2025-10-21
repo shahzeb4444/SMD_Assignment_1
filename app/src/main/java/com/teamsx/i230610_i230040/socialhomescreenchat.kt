@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.format.DateUtils
@@ -39,6 +40,8 @@ class socialhomescreenchat : AppCompatActivity() {
     private lateinit var sendButton: ImageView
     private lateinit var cameraButton: ImageView
     private lateinit var galleryButton: ImageView
+    private lateinit var voiceCallButton: ImageView
+    private lateinit var videoCallButton: ImageView
     private lateinit var otherUserNameText: TextView
     private lateinit var onlineStatusText: TextView
     private lateinit var database: DatabaseReference
@@ -54,6 +57,7 @@ class socialhomescreenchat : AppCompatActivity() {
     private var photoUri: Uri? = null
     private var otherUserStatusListener: ValueEventListener? = null
     private var screenshotDetector: ScreenshotDetector? = null
+    private var pendingCallType: CallType? = null
 
     private companion object {
         private const val STATUS_ONLINE_LABEL = "Online"
@@ -62,6 +66,8 @@ class socialhomescreenchat : AppCompatActivity() {
         private val STATUS_ONLINE_COLOR = Color.parseColor("#4CAF50")
         private val STATUS_OFFLINE_COLOR = Color.parseColor("#9E9E9E")
     }
+
+    private enum class CallType { VOICE, VIDEO }
 
     private fun extractOtherUserIdFromChat(chatId: String, selfId: String): String {
         if (chatId.isEmpty() || selfId.isEmpty()) return ""
@@ -116,6 +122,20 @@ class socialhomescreenchat : AppCompatActivity() {
         }
     }
 
+    private val callPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.entries.all { it.value }
+        val callType = pendingCallType
+        pendingCallType = null
+
+        if (granted && callType != null) {
+            launchCall(callType)
+        } else if (!granted) {
+            Toast.makeText(this, getString(R.string.call_permissions_denied), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -144,6 +164,8 @@ class socialhomescreenchat : AppCompatActivity() {
         sendButton = findViewById(R.id.sendButton)
         cameraButton = findViewById(R.id.cameraButton)
         galleryButton = findViewById(R.id.galleryButton)
+        voiceCallButton = findViewById(R.id.voiceCallButton)
+        videoCallButton = findViewById(R.id.videoCallButton)
         otherUserNameText = findViewById(R.id.otherUserNameText)
         onlineStatusText = findViewById(R.id.onlineStatusText)
         otherUserNameText.text = otherUserName
@@ -198,6 +220,9 @@ class socialhomescreenchat : AppCompatActivity() {
         // Gallery button
         galleryButton.setOnClickListener { galleryLauncher.launch("image/*") }
 
+        voiceCallButton.setOnClickListener { startCallWithPermissions(CallType.VOICE) }
+        videoCallButton.setOnClickListener { startCallWithPermissions(CallType.VIDEO) }
+
         // Real-time load
         loadMessagesRealTime()
 
@@ -225,6 +250,39 @@ class socialhomescreenchat : AppCompatActivity() {
             mediaCaption = ""
         )
         database.child(messageId).setValue(msg)
+    }
+
+    private fun startCallWithPermissions(type: CallType) {
+        val permissions = callPermissionsFor(type)
+        val hasPermissions = permissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasPermissions) {
+            launchCall(type)
+        } else {
+            pendingCallType = type
+            callPermissionsLauncher.launch(permissions)
+        }
+    }
+
+    private fun callPermissionsFor(type: CallType): Array<String> {
+        val required = mutableListOf(Manifest.permission.RECORD_AUDIO)
+        if (type == CallType.VIDEO) {
+            required += Manifest.permission.CAMERA
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            required += Manifest.permission.BLUETOOTH_CONNECT
+        }
+        return required.toTypedArray()
+    }
+
+    private fun launchCall(type: CallType) {
+        val intent = when (type) {
+            CallType.VOICE -> AgoraCallActivity.voiceCallIntent(this, chatId, otherUserName)
+            CallType.VIDEO -> AgoraCallActivity.videoCallIntent(this, chatId, otherUserName)
+        }
+        startActivity(intent)
     }
 
     // ===== Permissions & Camera =====

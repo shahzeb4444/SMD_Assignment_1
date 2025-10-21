@@ -35,6 +35,24 @@
             android:layout_height="wrap_content"
             android:textSize="12sp"
             android:textColor="#9E9E9E" />
+
+        <ImageView
+            android:id="@+id/voiceCallButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="12dp"
+            android:src="@drawable/ic_voice_call"
+            android:contentDescription="@string/voice_call"
+            android:padding="6dp" />
+
+        <ImageView
+            android:id="@+id/videoCallButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_video_call"
+            android:contentDescription="@string/video_call"
+            android:padding="6dp" />
     </LinearLayout>
 
     <View
