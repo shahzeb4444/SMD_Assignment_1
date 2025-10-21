@@ -63,6 +63,9 @@ dependencies {
     implementation("com.google.firebase:firebase-database:20.2.1")
     implementation("com.google.firebase:firebase-storage:20.2.1")
 
+
+    implementation("io.agora.rtc:full-sdk:4.6.0")
+
     // Image Loading with Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
