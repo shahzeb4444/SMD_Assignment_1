@@ -6,12 +6,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.format.DateUtils
 import android.util.Base64
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +23,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
+import com.google.firebase.database.ValueEventListener
+import java.util.Locale
 
 class socialhomescreenchat : AppCompatActivity() {
 
@@ -29,6 +39,8 @@ class socialhomescreenchat : AppCompatActivity() {
     private lateinit var sendButton: ImageView
     private lateinit var cameraButton: ImageView
     private lateinit var galleryButton: ImageView
+    private lateinit var otherUserNameText: TextView
+    private lateinit var onlineStatusText: TextView
     private lateinit var database: DatabaseReference
     private lateinit var messageAdapter: MessageAdapter
     private val messagesList = mutableListOf<Message>()
@@ -40,9 +52,42 @@ class socialhomescreenchat : AppCompatActivity() {
     private val currentUsername: String by lazy { FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous" }
 
     private var photoUri: Uri? = null
-    private lateinit var userStatusRef: DatabaseReference
+    private var otherUserStatusListener: ValueEventListener? = null
     private var screenshotDetector: ScreenshotDetector? = null
-    private var statusManager: UserStatusManager? = null
+
+    private companion object {
+        private const val STATUS_ONLINE_LABEL = "Online"
+        private const val STATUS_OFFLINE_LABEL = "Offline"
+        private const val STATUS_LAST_SEEN_FORMAT = "Last seen %s"
+        private val STATUS_ONLINE_COLOR = Color.parseColor("#4CAF50")
+        private val STATUS_OFFLINE_COLOR = Color.parseColor("#9E9E9E")
+    }
+
+    private fun extractOtherUserIdFromChat(chatId: String, selfId: String): String {
+        if (chatId.isEmpty() || selfId.isEmpty()) return ""
+        return when {
+            chatId.startsWith(selfId) -> chatId.removePrefix(selfId)
+            chatId.endsWith(selfId) -> chatId.removeSuffix(selfId)
+            else -> ""
+        }
+    }
+
+    private fun parseOnlineValue(rawValue: Any?): Boolean {
+        return when (rawValue) {
+            is Boolean -> rawValue
+            is Number -> rawValue.toInt() != 0
+            is String -> rawValue.equals("true", ignoreCase = true) || rawValue == "1"
+            else -> false
+        }
+    }
+
+    private fun parseLastSeenValue(rawValue: Any?): Long {
+        return when (rawValue) {
+            is Number -> rawValue.toLong()
+            is String -> rawValue.toLongOrNull() ?: 0L
+            else -> 0L
+        }
+    }
 
     // throttle for screenshot messages
     private var lastScreenshotNotifyAt = 0L
@@ -73,13 +118,25 @@ class socialhomescreenchat : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val incomingChatId = intent.getStringExtra("chatId")
+        val incomingUserName = intent.getStringExtra("otherUserName")
+        val incomingOtherUserId = intent.getStringExtra("otherUserId")
+
+        if (incomingChatId.isNullOrBlank() || incomingUserName.isNullOrBlank()) {
+            finish()
+            return
+        }
+
+        chatId = incomingChatId
+        otherUserName = incomingUserName
+        otherUserId = incomingOtherUserId ?: ""
+        if (otherUserId.isEmpty()) {
+            otherUserId = extractOtherUserIdFromChat(chatId, currentUserId)
+        }
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_socialhomescreenchat)
-
-        // Get chat data from intent
-        chatId = intent.getStringExtra("chatId") ?: return
-        otherUserName = intent.getStringExtra("otherUserName") ?: "User"
-        otherUserId = intent.getStringExtra("otherUserId") ?: ""
 
         // Initialize views
         recyclerView = findViewById(R.id.messagesRecyclerView)
@@ -87,6 +144,13 @@ class socialhomescreenchat : AppCompatActivity() {
         sendButton = findViewById(R.id.sendButton)
         cameraButton = findViewById(R.id.cameraButton)
         galleryButton = findViewById(R.id.galleryButton)
+        otherUserNameText = findViewById(R.id.otherUserNameText)
+        onlineStatusText = findViewById(R.id.onlineStatusText)
+        otherUserNameText.text = otherUserName
+        onlineStatusText.apply {
+            text = STATUS_OFFLINE_LABEL
+            setTextColor(STATUS_OFFLINE_COLOR)
+        }
 
         // Setup RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
@@ -97,7 +161,11 @@ class socialhomescreenchat : AppCompatActivity() {
 
         // Database reference
         database = FirebaseDatabase.getInstance().reference.child("messages").child(chatId)
-        userStatusRef = FirebaseDatabase.getInstance().reference.child("users").child(currentUserId)
+        if (currentUserId.isNotEmpty()) {
+            val userStatusRef = FirebaseDatabase.getInstance().reference.child("users").child(currentUserId)
+            userStatusRef.child("isOnline").onDisconnect().setValue(false)
+            userStatusRef.child("lastSeen").onDisconnect().setValue(ServerValue.TIMESTAMP)
+        }
 
         // Screenshot detection
         screenshotDetector = ScreenshotDetector(this)
@@ -106,17 +174,9 @@ class socialhomescreenchat : AppCompatActivity() {
             sendScreenshotNotice() // <-- add notice into this chat
         }
 
-        // Online status manager
-        statusManager = UserStatusManager(this)
-        statusManager?.setUserOnline()
-
-        // Set user online
-        setUserOnline(true)
-
         // Back button
         val backButton = findViewById<ImageView>(R.id.cameralogo)
         backButton.setOnClickListener {
-            setUserOnline(false)
             val intent = Intent(this, socialhomescreen4::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             startActivity(intent)
@@ -306,27 +366,42 @@ class socialhomescreenchat : AppCompatActivity() {
     // ===== Presence =====
 
     private fun monitorUserStatus() {
+        if (otherUserId.isEmpty()) return
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val isOnline = parseOnlineValue(snapshot.child("isOnline").value)
+                val lastSeen = parseLastSeenValue(snapshot.child("lastSeen").value)
+                updateOnlineStatusUI(isOnline, lastSeen)
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        }
         FirebaseDatabase.getInstance().reference.child("users").child(otherUserId)
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val isOnline = snapshot.child("isOnline").getValue(Boolean::class.java) ?: false
-                    updateOnlineStatusUI(isOnline)
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
+            .addValueEventListener(listener)
+        otherUserStatusListener = listener
     }
 
-    private fun updateOnlineStatusUI(isOnline: Boolean) {
-        // If you want to show text in header:
-        // findViewById<TextView>(R.id.onlineStatusText)?.apply {
-        //     text = if (isOnline) "Online" else "Offline"
-        //     setTextColor(if (isOnline) 0xFF4CAF50.toInt() else 0xFF999999.toInt())
-        // }
-    }
+    private fun updateOnlineStatusUI(isOnline: Boolean, lastSeen: Long) {
+        if (!::onlineStatusText.isInitialized) return
 
-    private fun setUserOnline(online: Boolean) {
-        userStatusRef.child("isOnline").setValue(online)
-        userStatusRef.child("lastSeen").setValue(System.currentTimeMillis())
+        if (isOnline) {
+            onlineStatusText.text = STATUS_ONLINE_LABEL
+            onlineStatusText.setTextColor(STATUS_ONLINE_COLOR)
+        } else {
+            val statusText = if (lastSeen > 0L) {
+                val relativeTime = DateUtils.getRelativeTimeSpanString(
+                    lastSeen,
+                    System.currentTimeMillis(),
+                    DateUtils.MINUTE_IN_MILLIS
+                ).toString()
+                String.format(Locale.getDefault(), STATUS_LAST_SEEN_FORMAT, relativeTime)
+            } else {
+                STATUS_OFFLINE_LABEL
+            }
+            onlineStatusText.text = statusText
+            onlineStatusText.setTextColor(STATUS_OFFLINE_COLOR)
+        }
     }
 
     // ===== Edit / Delete =====
@@ -381,8 +456,13 @@ class socialhomescreenchat : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        setUserOnline(false)
-        statusManager?.setUserOffline()
         screenshotDetector?.stopDetection()
+        otherUserStatusListener?.let {
+            if (otherUserId.isNotEmpty()) {
+                FirebaseDatabase.getInstance().reference.child("users").child(otherUserId)
+                    .removeEventListener(it)
+            }
+        }
+        otherUserStatusListener = null
     }
 }

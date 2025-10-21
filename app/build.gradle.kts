@@ -66,7 +66,7 @@ dependencies {
     // Image Loading with Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
-
+    implementation("androidx.lifecycle:lifecycle-process:2.8.3")
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
