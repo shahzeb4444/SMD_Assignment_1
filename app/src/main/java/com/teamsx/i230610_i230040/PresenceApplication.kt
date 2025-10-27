@@ -42,6 +42,7 @@ class PresenceApplication : Application() {
         super.onCreate()
         ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
         auth.addAuthStateListener(authListener)
+        PushNotificationManager.initialize(this)
         lastKnownUserId = auth.currentUser?.uid
     }
 

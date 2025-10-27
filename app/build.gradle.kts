@@ -63,6 +63,8 @@ dependencies {
     implementation("com.google.firebase:firebase-database:20.2.1")
     implementation("com.google.firebase:firebase-storage:20.2.1")
 
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
 
     implementation("io.agora.rtc:full-sdk:4.6.0")
 
@@ -70,6 +72,10 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
     implementation("androidx.lifecycle:lifecycle-process:2.8.3")
+
+    // OkHttp for API calls
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
