@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AgentMigrationStateService">
+    <option name="pendingSessionIds">
+      <option value="ae9ab481-32ec-4a94-a17f-12bd24b83900" />
+    </option>
+    <option name="pendingTurns">
+      <map>
+        <entry key="ae9ab481-32ec-4a94-a17f-12bd24b83900">
+          <value>
+            <set>
+              <option value="fb3b83c0-4cd3-4364-9292-3c3bbae0981d" />
+              <option value="9141767a-efb9-4fb5-bd60-321c01187e10" />
+              <option value="35c703df-ab7a-4e3e-8ac0-09605231bfe0" />
+            </set>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <pendingWorkingSetItems>
+      <entry key="ae9ab481-32ec-4a94-a17f-12bd24b83900">
+        <set>
+          <option value="file://$PROJECT_DIR$/app/src/main/java/com/teamsx/i230610_i230040/HomeFragment.kt" />
+          <option value="file://$PROJECT_DIR$/app/src/main/java/com/teamsx/i230610_i230040/UserAdapter.kt" />
+          <option value="file://$PROJECT_DIR$/app/src/main/java/com/teamsx/i230610_i230040/socialhomescreen4.kt" />
+          <option value="file://$PROJECT_DIR$/app/src/main/res/layout/item_user_dynamic.xml" />
+        </set>
+      </entry>
+    </pendingWorkingSetItems>
+  </component>
+</project>
