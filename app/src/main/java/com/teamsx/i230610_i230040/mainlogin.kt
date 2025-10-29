@@ -58,6 +58,9 @@ class mainlogin : AppCompatActivity() {
             auth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
                 loginBtn.isEnabled = true
                 if (task.isSuccessful) {
+                    // Register FCM token
+                    FCMTokenManager.registerFCMToken(this)
+
                     // go to your main/home screen
                     val intent = Intent(this, login_splash::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

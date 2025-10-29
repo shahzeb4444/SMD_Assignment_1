@@ -136,7 +136,11 @@ class second_page : AppCompatActivity() {
                             "/usernames/$usernameKey" to uid
                         )
                         db.updateChildren(updates)
-                            .addOnSuccessListener { goNext() }
+                            .addOnSuccessListener {
+                                // Register FCM token
+                                FCMTokenManager.registerFCMToken(this@second_page)
+                                goNext()
+                            }
                             .addOnFailureListener { e -> toast("DB write failed: ${e.localizedMessage}") }
                     }
                     .addOnFailureListener { e ->

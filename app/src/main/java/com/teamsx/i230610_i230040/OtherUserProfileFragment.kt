@@ -9,11 +9,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OtherUserProfileFragment : Fragment() {
 
@@ -235,7 +239,20 @@ class OtherUserProfileFragment : Fragment() {
                     "/relationships/$fromUid/$toUid" to "requested",
                     "/relationships/$toUid/$fromUid" to "incoming_request"
                 )
-                db.updateChildren(updates).addOnSuccessListener { renderFollowButton() }
+                db.updateChildren(updates).addOnSuccessListener {
+                    renderFollowButton()
+
+                    // Send push notification
+                    lifecycleScope.launch {
+                        withContext(Dispatchers.IO) {
+                            NotificationHelper.sendFollowRequestNotification(
+                                recipientUserId = toUid,
+                                fromUsername = req.fromUsername,
+                                fromUserId = fromUid
+                            )
+                        }
+                    }
+                }
                     .addOnFailureListener { toast("Failed to request") }
             }
             override fun onCancelled(error: DatabaseError) { toast("Failed to request") }

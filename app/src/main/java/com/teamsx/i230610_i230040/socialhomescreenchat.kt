@@ -31,6 +31,9 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class socialhomescreenchat : AppCompatActivity() {
@@ -250,6 +253,17 @@ class socialhomescreenchat : AppCompatActivity() {
             mediaCaption = ""
         )
         database.child(messageId).setValue(msg)
+            .addOnSuccessListener {
+                // Send push notification to the other user
+                CoroutineScope(Dispatchers.IO).launch {
+                    NotificationHelper.sendScreenshotDetectedNotification(
+                        recipientUserId = otherUserId,
+                        userName = currentUsername,
+                        userId = currentUserId,
+                        chatId = chatId
+                    )
+                }
+            }
     }
 
     private fun startCallWithPermissions(type: CallType) {
@@ -336,6 +350,18 @@ class socialhomescreenchat : AppCompatActivity() {
             .addOnSuccessListener {
                 Toast.makeText(this, "Image sent", Toast.LENGTH_SHORT).show()
                 messageInput.text.clear()
+
+                // Send push notification for media
+                CoroutineScope(Dispatchers.IO).launch {
+                    NotificationHelper.sendNewMessageNotification(
+                        recipientUserId = otherUserId,
+                        senderName = currentUsername,
+                        messageText = msg.mediaCaption.ifEmpty { "📷 Photo" },
+                        isMedia = true,
+                        chatId = chatId,
+                        senderId = currentUserId
+                    )
+                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
@@ -386,7 +412,21 @@ class socialhomescreenchat : AppCompatActivity() {
         )
 
         database.child(messageId).setValue(message)
-            .addOnSuccessListener { Toast.makeText(this, "Message sent", Toast.LENGTH_SHORT).show() }
+            .addOnSuccessListener {
+                Toast.makeText(this, "Message sent", Toast.LENGTH_SHORT).show()
+
+                // Send push notification
+                CoroutineScope(Dispatchers.IO).launch {
+                    NotificationHelper.sendNewMessageNotification(
+                        recipientUserId = otherUserId,
+                        senderName = currentUsername,
+                        messageText = text,
+                        isMedia = false,
+                        chatId = chatId,
+                        senderId = currentUserId
+                    )
+                }
+            }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
                 android.util.Log.e("SendMessage", "Error: ", e)
