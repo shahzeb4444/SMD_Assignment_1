@@ -261,7 +261,10 @@ class HomeFragment : Fragment() {
                                 val post = postSnapshot.getValue(Post::class.java)
                                 if (post != null) {
                                     synchronized(tempPosts) {
-                                        tempPosts.add(post)
+                                        // Only add if post doesn't already exist
+                                        if (tempPosts.none { it.postId == post.postId }) {
+                                            tempPosts.add(post)
+                                        }
                                     }
                                 }
 
@@ -296,7 +299,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun updatePostsUI(tempPosts: List<Post>) {
-        val sorted = tempPosts.sortedByDescending { it.timestamp }
+        // Remove duplicates by postId and sort by timestamp
+        val uniquePosts = tempPosts.distinctBy { it.postId }
+        val sorted = uniquePosts.sortedByDescending { it.timestamp }
         posts.clear()
         posts.addAll(sorted)
         postsAdapter.notifyDataSetChanged()
